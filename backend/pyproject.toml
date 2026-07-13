@@ -1,0 +1,17 @@
+[tool.basedpyright]
+# 本项目是 FastAPI 单体服务，从 backend 目录以 `app` 作为顶层包运行，
+# 包内模块统一使用 `from app.xxx` 绝对导入（运行时合法）。
+include = ["app"]
+extraPaths = ["."]
+
+# 与本项目风格冲突、且为 basedpyright 特有严格规则的误报，予以关闭。
+reportImplicitRelativeImport = false   # 包内 `from app.xxx` 被误判为隐式相对导入
+reportExplicitAny = false              # 内存 mock 模块使用 Any 注解
+reportAny = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportMissingTypeArgument = false
+reportUnusedParameter = false
+reportUnusedCallResult = false
