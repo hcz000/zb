@@ -8,6 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
 	initAIEvents();
 	initLiveControlEvents();
 	initDebateFlowEvents();
+	
+	// 点击弹窗外部关闭 - 用户详情弹窗
+	document.getElementById('user-detail-modal')?.addEventListener('click', function(e) {
+		if (e.target === this) {
+			this.classList.remove('show');
+		}
+	});
+	// 点击弹窗外部关闭 - 创建用户弹窗
+	document.getElementById('create-user-modal')?.addEventListener('click', function(e) {
+		if (e.target === this) {
+			this.classList.remove('show');
+		}
+	});
 });
 
 // ==================== 票数管理事件 ====================

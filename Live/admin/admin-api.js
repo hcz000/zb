@@ -964,6 +964,288 @@ async function sendDebateFlowControl(streamId, action, segmentIndex = 0) {
 	}
 }
 
+// ==================== 用户管理 ====================
+
+/**
+ * 创建管理员用户
+ * @param {string} nickname - 用户昵称
+ * @param {string} avatar - 用户头像
+ * @returns {Promise<Object|null>}
+ */
+async function createAdminUser(nickname, avatar = '👤') {
+	return await apiRequest('/api/admin/users', {
+		method: 'POST',
+		body: JSON.stringify({ nickname, avatar })
+	});
+}
+
+/**
+ * 获取用户详情
+ * @param {string} userId - 用户ID
+ * @returns {Promise<Object|null>}
+ */
+async function getAdminUserDetail(userId) {
+	return await apiRequest(`/api/admin/users/${userId}`, {
+		method: 'GET'
+	});
+}
+
+// ==================== 直播计划管理 ====================
+
+/**
+ * 设置并立即开始直播
+ * @param {Object} data - { streamId, startNow, scheduledStartTime, scheduledEndTime }
+ * @returns {Promise<Object|null>}
+ */
+async function setupAndStartLive(data) {
+	return await apiRequest('/api/admin/live/setup-and-start', {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+/**
+ * 设置直播计划
+ * @param {Object} data - { streamId, scheduledStartTime, scheduledEndTime }
+ * @returns {Promise<Object|null>}
+ */
+async function setLiveSchedule(data) {
+	return await apiRequest('/api/admin/live/schedule', {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+/**
+ * 获取直播计划
+ * @param {string|null} streamId - 直播流ID（可选）
+ * @returns {Promise<Object|null>}
+ */
+async function getLiveSchedulePlan(streamId = null) {
+	const queryStr = streamId ? `?stream_id=${streamId}` : '';
+	return await apiRequest(`/api/admin/live/schedule${queryStr}`, {
+		method: 'GET'
+	});
+}
+
+/**
+ * 取消直播计划
+ * @param {string|null} streamId - 直播流ID（可选）
+ * @returns {Promise<Object|null>}
+ */
+async function cancelLiveSchedulePlan(streamId = null) {
+	return await apiRequest('/api/admin/live/schedule/cancel', {
+		method: 'POST',
+		body: JSON.stringify({ streamId })
+	});
+}
+
+// ==================== 票数管理（旧版直接接口） ====================
+
+/**
+ * 获取管理端票数
+ * @param {string|null} streamId - 直播流ID（可选）
+ * @returns {Promise<Object|null>}
+ */
+async function getAdminVotesRaw(streamId = null) {
+	const queryStr = streamId ? `?stream_id=${streamId}` : '';
+	return await apiRequest(`/api/admin/votes${queryStr}`, {
+		method: 'GET'
+	});
+}
+
+/**
+ * 更新管理端票数（直接设置）
+ * @param {Object} data - { streamId, leftVotes, rightVotes }
+ * @returns {Promise<Object|null>}
+ */
+async function updateAdminVotesRaw(data) {
+	return await apiRequest('/api/admin/votes', {
+		method: 'PUT',
+		body: JSON.stringify(data)
+	});
+}
+
+/**
+ * 重置管理端票数
+ * @param {string|null} streamId - 直播流ID（可选）
+ * @returns {Promise<Object|null>}
+ */
+async function resetAdminVotesRaw(streamId = null) {
+	return await apiRequest('/api/admin/votes/reset', {
+		method: 'POST',
+		body: JSON.stringify({ streamId })
+	});
+}
+
+// ==================== AI内容管理（旧版接口） ====================
+
+/**
+ * 获取管理端全部AI内容（不分页）
+ * @param {string|null} streamId - 直播流ID（可选）
+ * @returns {Promise<Array|null>}
+ */
+async function getAdminAIContentAll(streamId = null) {
+	const queryStr = streamId ? `?stream_id=${streamId}` : '';
+	return await apiRequest(`/api/admin/ai-content${queryStr}`, {
+		method: 'GET'
+	});
+}
+
+/**
+ * 获取管理端AI内容列表（分页）
+ * @param {number} page - 页码
+ * @param {number} pageSize - 每页数量
+ * @returns {Promise<Object|null>}
+ */
+async function getAdminAIContentList(page = 1, pageSize = 20) {
+	return await apiRequest(`/api/admin/ai-content/list?page=${page}&pageSize=${pageSize}`, {
+		method: 'GET'
+	});
+}
+
+/**
+ * 获取单条AI内容详情
+ * @param {string} id - AI内容ID
+ * @returns {Promise<Object|null>}
+ */
+async function getAdminAIContentDetail(id) {
+	return await apiRequest(`/api/admin/ai-content/${id}`, {
+		method: 'GET'
+	});
+}
+
+/**
+ * 创建AI内容
+ * @param {Object} data - AI内容数据 { text, side, debateId, confidence }
+ * @returns {Promise<Object|null>}
+ */
+async function createAdminAIContent(data) {
+	return await apiRequest('/api/admin/ai-content', {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+/**
+ * 更新AI内容
+ * @param {string} id - AI内容ID
+ * @param {Object} data - 更新的数据
+ * @returns {Promise<Object|null>}
+ */
+async function updateAdminAIContent(id, data) {
+	return await apiRequest(`/api/admin/ai-content/${id}`, {
+		method: 'PUT',
+		body: JSON.stringify(data)
+	});
+}
+
+/**
+ * 删除AI内容（旧版路径）
+ * @param {string} id - AI内容ID
+ * @returns {Promise<Object|null>}
+ */
+async function deleteAdminAIContent(id) {
+	return await apiRequest(`/api/admin/ai-content/${id}`, {
+		method: 'DELETE'
+	});
+}
+
+/**
+ * 获取AI内容的评论（旧版接口）
+ * @param {string} contentId - AI内容ID
+ * @returns {Promise<Object|null>}
+ */
+async function getAdminAIContentComments(contentId) {
+	return await apiRequest(`/api/admin/ai-content/${contentId}/comments`, {
+		method: 'GET'
+	});
+}
+
+/**
+ * 删除AI内容评论（旧版接口）
+ * @param {string} contentId - AI内容ID
+ * @param {string} commentId - 评论ID
+ * @returns {Promise<Object|null>}
+ */
+async function deleteAdminAIContentComment(contentId, commentId) {
+	return await apiRequest(`/api/admin/ai-content/${contentId}/comments/${commentId}`, {
+		method: 'DELETE'
+	});
+}
+
+// ==================== 公开接口 ====================
+
+/**
+ * 获取公开AI内容列表
+ * @returns {Promise<Array|null>}
+ */
+async function getPublicAIContent() {
+	return await apiRequest('/api/ai-content', {
+		method: 'GET'
+	});
+}
+
+/**
+ * 获取公开辩题
+ * @returns {Promise<Object|null>}
+ */
+async function getPublicDebateTopic() {
+	return await apiRequest('/api/debate-topic', {
+		method: 'GET'
+	});
+}
+
+// ==================== 管理端辩题设置 ====================
+
+/**
+ * 获取管理端辩题设置
+ * @returns {Promise<Object|null>}
+ */
+async function getAdminDebateSettings() {
+	return await apiRequest('/api/admin/debate', {
+		method: 'GET'
+	});
+}
+
+/**
+ * 更新管理端辩题设置
+ * @param {Object} data - 辩题数据 { title, description, leftPosition, rightPosition, isActive }
+ * @returns {Promise<Object|null>}
+ */
+async function updateAdminDebateSettings(data) {
+	return await apiRequest('/api/admin/debate', {
+		method: 'PUT',
+		body: JSON.stringify(data)
+	});
+}
+
+// ==================== 数据统计 ====================
+
+/**
+ * 获取统计摘要
+ * @param {string|null} streamId - 直播流ID（可选）
+ * @returns {Promise<Object|null>}
+ */
+async function getStatisticsSummary(streamId = null) {
+	const queryStr = streamId ? `?stream_id=${streamId}` : '';
+	return await apiRequest(`/api/admin/statistics/summary${queryStr}`, {
+		method: 'GET'
+	});
+}
+
+/**
+ * 获取每日统计数据
+ * @param {string|null} streamId - 直播流ID（可选）
+ * @returns {Promise<Array|null>}
+ */
+async function getStatisticsDaily(streamId = null) {
+	const queryStr = streamId ? `?stream_id=${streamId}` : '';
+	return await apiRequest(`/api/admin/statistics/daily${queryStr}`, {
+		method: 'GET'
+	});
+}
+
 console.log('✅ 后台管理系统API模块加载完成');
 console.log('📡 当前API服务器:', getAPIBase());
 

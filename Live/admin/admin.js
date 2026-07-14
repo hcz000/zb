@@ -659,6 +659,7 @@ function loadPageData(page) {
 			break;
 		case 'live-setup':
 			loadLiveSetup(); // 这个函数会调用 loadStreamsToSelect() 和启动定时刷新
+			loadLiveSchedule(); // 加载直播计划
 			break;
 		case 'users':
 			loadUsers();
@@ -2027,9 +2028,44 @@ document.getElementById('user-search')?.addEventListener('input', (e) => {
 	});
 });
 
-function viewUser(id) {
-	// 实现用户详情查看
-	alert(`查看用户 ${id} 的详细信息`);
+async function viewUser(id) {
+	const modal = document.getElementById('user-detail-modal');
+	if (!modal) return;
+	
+	// 显示加载状态
+	document.getElementById('user-detail-content').innerHTML = '<div style="text-align:center;padding:40px;color:#999;">加载中...</div>';
+	modal.classList.add('show');
+	
+	try {
+		const user = await getAdminUserDetail(id);
+		const userData = user?.data || user;
+		
+		if (!userData || !userData.id) {
+			document.getElementById('user-detail-content').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">用户不存在</div>';
+			return;
+		}
+		
+		const avatarDiv = document.getElementById('user-detail-avatar');
+		const nicknameEl = document.getElementById('user-detail-nickname');
+		const idEl = document.getElementById('user-detail-id');
+		const fullIdEl = document.getElementById('user-detail-full-id');
+		const joinTimeEl = document.getElementById('user-detail-join-time');
+		const statusEl = document.getElementById('user-detail-status');
+		
+		if (avatarDiv) avatarDiv.textContent = userData.avatar || '👤';
+		if (nicknameEl) nicknameEl.textContent = userData.nickname || '未设置';
+		if (idEl) idEl.textContent = 'ID: ' + (userData.id ? userData.id.slice(0, 12) + '...' : '-');
+		if (fullIdEl) fullIdEl.textContent = userData.id || '-';
+		if (joinTimeEl) joinTimeEl.textContent = userData.joinTime ? new Date(userData.joinTime).toLocaleString() : '-';
+		if (statusEl) {
+			statusEl.innerHTML = userData.status === 'online' 
+				? '<span style="color:#27ae60;">🟢 在线</span>' 
+				: '<span style="color:#999;">⚪ 离线</span>';
+		}
+	} catch (error) {
+		console.error('加载用户详情失败:', error);
+		document.getElementById('user-detail-content').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">加载失败: ' + error.message + '</div>';
+	}
 }
 
 // ==================== 票数管理 ====================
@@ -2350,64 +2386,313 @@ document.querySelector('[data-modal="ai-content-modal"]')?.addEventListener('cli
 // ==================== 数据统计 ====================
 async function loadStatistics() {
 	try {
-		// 使用 dashboard 接口获取统计数据
-		const result = await fetchDashboard();
-		// 处理返回格式
-		const data = result?.data || result;
-		if (!data) {
-			console.error('获取统计数据失败');
-			return;
+		// 获取选中流
+		const streamSelect = document.getElementById('stats-stream-select');
+		const streamId = streamSelect?.value || null;
+		
+		// 并行获取统计摘要和每日统计
+		const [summaryResult, dailyResult] = await Promise.all([
+			getStatisticsSummary(streamId),
+			getStatisticsDaily(streamId)
+		]);
+		
+		const summary = summaryResult?.data || summaryResult;
+		
+		// 更新摘要卡片
+		if (summary) {
+			const totalVotesEl = document.getElementById('stats-total-votes');
+			const totalUsersEl = document.getElementById('stats-total-users');
+			const totalStreamsEl = document.getElementById('stats-total-streams');
+			const liveDaysEl = document.getElementById('stats-live-days');
+			
+			if (totalVotesEl) totalVotesEl.textContent = (summary.totalVotes || 0).toLocaleString();
+			if (totalUsersEl) totalUsersEl.textContent = (summary.totalUsers || 0).toLocaleString();
+			if (totalStreamsEl) totalStreamsEl.textContent = (summary.totalStreams || 0).toLocaleString();
+			if (liveDaysEl) liveDaysEl.textContent = (summary.totalLiveDays || 0).toLocaleString();
 		}
 		
-		// 获取投票统计
-		const voteStats = await fetchVotesStatistics('24h');
-		
-		// 汇总概览渲染（若页面有对应元素可填充，没有则动态插入到 statistics 页面顶部）
-		const page = document.getElementById('statistics');
-		if (!page) return;
-		
-		// 创建概览卡片
-		let overview = page.querySelector('#stats-overview');
-		if (!overview) {
-			overview = document.createElement('div');
-			overview.id = 'stats-overview';
-			overview.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px;';
-			page.insertBefore(overview, page.firstChild);
-		}
-		
-		// 使用 dashboard 数据
-		overview.innerHTML = `
-			<div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-				<h4 style="margin: 0 0 10px 0; color: #666; font-size: 14px;">观众总数</h4>
-				<div style="font-size: 32px; font-weight: 700; color: #667eea;">${data.totalUsers || 0}</div>
-  </div>
-			<div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-				<h4 style="margin: 0 0 10px 0; color: #666; font-size: 14px;">累计投票</h4>
-				<div style="font-size: 32px; font-weight: 700; color: #4CAF50;">${data.totalVotes || 0}</div>
-  </div>
-			<div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-				<h4 style="margin: 0 0 10px 0; color: #666; font-size: 14px;">活跃用户</h4>
-				<div style="font-size: 32px; font-weight: 700; color: #FF9800;">${data.activeUsers || 0}</div>
-  </div>
-			<div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-				<h4 style="margin: 0 0 10px 0; color: #666; font-size: 14px;">投票分布</h4>
-				<div style="font-size: 18px; font-weight: 700; color: #2196F3; margin-bottom: 5px;">正方: ${data.leftVotes || 0}</div>
-				<div style="font-size: 18px; font-weight: 700; color: #f44336;">反方: ${data.rightVotes || 0}</div>
-  </div>
-`;
-		
-		// 如果有投票统计数据，显示时间线（如果页面有对应容器）
-		if (voteStats && voteStats.timeline) {
-			const timelineContainer = page.querySelector('#vote-timeline');
-			if (timelineContainer) {
-				// 可以在这里渲染投票趋势图
-				console.log('投票统计时间线:', voteStats.timeline);
+		// 渲染每日统计
+		const dailyContainer = document.getElementById('daily-stats-container');
+		if (dailyContainer) {
+			const dailyData = (dailyResult?.data && dailyResult.data.length > 0) ? dailyResult.data : dailyResult;
+			if (Array.isArray(dailyData) && dailyData.length > 0) {
+				dailyContainer.innerHTML = `
+					<table class="data-table" style="width:100%;">
+						<thead>
+							<tr>
+								<th>日期</th>
+								<th>投票数</th>
+								<th>活跃用户</th>
+								<th>直播时长(分钟)</th>
+							</tr>
+						</thead>
+						<tbody>
+							${dailyData.map(d => `
+								<tr>
+									<td>${d.date || '-'}</td>
+									<td>${(d.votes || 0).toLocaleString()}</td>
+									<td>${d.activeUsers || 0}</td>
+									<td>${d.duration || 0}</td>
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				`;
+			} else {
+				dailyContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无每日统计数据</div>';
 			}
 		}
 		
 	} catch (error) {
 		console.error('加载统计数据失败:', error);
-		showNotification('加载失败', 'error');
+		showNotification('加载统计数据失败', 'error');
+	}
+}
+
+// ==================== 用户管理 ====================
+
+/**
+ * 初始化创建用户相关事件
+ */
+function initCreateUserEvents() {
+	// 打开创建用户弹窗
+	const createBtn = document.getElementById('create-user-btn');
+	if (createBtn) {
+		createBtn.addEventListener('click', () => {
+			const modal = document.getElementById('create-user-modal');
+			if (modal) modal.classList.add('show');
+		});
+	}
+	
+	// 关闭创建用户弹窗
+	const closeBtn = document.getElementById('close-create-user-modal');
+	const cancelBtn = document.getElementById('cancel-create-user-btn');
+	if (closeBtn) closeBtn.addEventListener('click', () => {
+		document.getElementById('create-user-modal')?.classList.remove('show');
+	});
+	if (cancelBtn) cancelBtn.addEventListener('click', () => {
+		document.getElementById('create-user-modal')?.classList.remove('show');
+	});
+	
+	// Emoji选择器
+	document.querySelectorAll('.emoji-option').forEach(el => {
+		el.addEventListener('click', function() {
+			const emoji = this.getAttribute('data-emoji');
+			document.getElementById('create-user-avatar').value = emoji;
+			// 高亮选中
+			document.querySelectorAll('.emoji-option').forEach(e => e.style.borderColor = 'transparent');
+			this.style.borderColor = '#3498db';
+		});
+	});
+	
+	// 创建用户表单提交
+	const form = document.getElementById('create-user-form');
+	if (form) {
+		form.addEventListener('submit', async (e) => {
+			e.preventDefault();
+			const nickname = document.getElementById('create-user-nickname').value.trim();
+			const avatar = document.getElementById('create-user-avatar').value.trim() || '👤';
+			
+			if (!nickname) {
+				alert('请输入用户昵称');
+				return;
+			}
+			
+			const btn = form.querySelector('button[type="submit"]');
+			const originalText = btn.textContent;
+			btn.disabled = true;
+			btn.textContent = '创建中...';
+			
+			try {
+				const result = await createAdminUser(nickname, avatar);
+				if (result) {
+					showNotification('用户创建成功', 'success');
+					document.getElementById('create-user-modal')?.classList.remove('show');
+					form.reset();
+					document.getElementById('create-user-avatar').value = '👤';
+					// 重新加载用户列表
+					loadUsers();
+				}
+			} catch (err) {
+				showNotification('创建失败: ' + err.message, 'error');
+			} finally {
+				btn.disabled = false;
+				btn.textContent = originalText;
+			}
+		});
+	}
+	
+	// 关闭用户详情弹窗
+	const closeDetailBtn = document.getElementById('close-user-detail-modal');
+	if (closeDetailBtn) closeDetailBtn.addEventListener('click', () => {
+		document.getElementById('user-detail-modal')?.classList.remove('show');
+	});
+}
+
+// ==================== 直播计划管理 ====================
+
+/**
+ * 加载直播计划相关数据
+ */
+async function loadLiveSchedule() {
+	try {
+		const schedule = await getLiveSchedulePlan();
+		const scheduleDiv = document.getElementById('live-schedule-info');
+		const statusText = document.getElementById('schedule-status-text');
+		const timeText = document.getElementById('schedule-time-text');
+		const streamText = document.getElementById('schedule-stream-text');
+		
+		if (!scheduleDiv) return;
+		
+		const scheduleData = schedule?.data || schedule;
+		
+		if (scheduleData && scheduleData.scheduledStartTime) {
+			scheduleDiv.style.display = 'block';
+			if (statusText) statusText.textContent = '已设置直播计划';
+			if (timeText) {
+				const start = new Date(scheduleData.scheduledStartTime).toLocaleString();
+				const end = scheduleData.scheduledEndTime ? ' ~ ' + new Date(scheduleData.scheduledEndTime).toLocaleString() : '';
+				timeText.textContent = '开播时间: ' + start + end;
+			}
+			if (streamText && scheduleData.streamId) {
+				// 查找流名称
+				const streamsResult = await getStreamsList();
+				const streams = streamsResult?.streams || streamsResult?.data || [];
+				const stream = streams.find(s => s.id === scheduleData.streamId);
+				streamText.textContent = '直播流: ' + (stream?.name || scheduleData.streamId);
+			}
+		} else {
+			scheduleDiv.style.display = 'none';
+		}
+	} catch (error) {
+		console.error('加载直播计划失败:', error);
+	}
+}
+
+/**
+ * 初始化直播计划事件
+ */
+function initScheduleEvents() {
+	// 设置计划按钮
+	const setBtn = document.getElementById('set-schedule-btn');
+	if (setBtn) {
+		setBtn.addEventListener('click', async () => {
+			const streamId = document.getElementById('schedule-stream-select')?.value;
+			const startTime = document.getElementById('schedule-start-time')?.value;
+			const endTime = document.getElementById('schedule-end-time')?.value;
+			
+			if (!streamId) { alert('请选择直播流'); return; }
+			if (!startTime) { alert('请设置开始时间'); return; }
+			
+			const startDate = new Date(startTime);
+			if (startDate <= new Date()) { alert('开始时间必须晚于当前时间'); return; }
+			
+			const data = {
+				streamId,
+				scheduledStartTime: startDate.toISOString(),
+				scheduledEndTime: endTime ? new Date(endTime).toISOString() : undefined
+			};
+			
+			const originalText = setBtn.textContent;
+			setBtn.disabled = true;
+			setBtn.textContent = '设置中...';
+			
+			try {
+				const result = await setLiveSchedule(data);
+				if (result) {
+					showNotification('直播计划已设置', 'success');
+					loadLiveSchedule();
+				}
+			} catch (err) {
+				showNotification('设置失败: ' + err.message, 'error');
+			} finally {
+				setBtn.disabled = false;
+				setBtn.textContent = originalText;
+			}
+		});
+	}
+	
+	// 取消计划按钮
+	const cancelBtn = document.getElementById('cancel-schedule-btn');
+	if (cancelBtn) {
+		cancelBtn.addEventListener('click', async () => {
+			if (!confirm('确定要取消直播计划吗？')) return;
+			
+			const originalText = cancelBtn.textContent;
+			cancelBtn.disabled = true;
+			cancelBtn.textContent = '取消中...';
+			
+			try {
+				await cancelLiveSchedulePlan();
+				showNotification('直播计划已取消', 'success');
+				loadLiveSchedule();
+			} catch (err) {
+				showNotification('取消失败: ' + err.message, 'error');
+			} finally {
+				cancelBtn.disabled = false;
+				cancelBtn.textContent = originalText;
+			}
+		});
+	}
+	
+	// 加载计划流列表到选择器
+	loadScheduleStreamsList();
+}
+
+/**
+ * 加载计划用的流列表
+ */
+async function loadScheduleStreamsList() {
+	const select = document.getElementById('schedule-stream-select');
+	if (!select) return;
+	
+	try {
+		const result = await getStreamsList();
+		const streams = result?.streams || result?.data || [];
+		
+		select.innerHTML = '<option value="">请选择直播流</option>' +
+			streams.map(s => `<option value="${s.id}">${s.name || 'Unnamed'} (${s.type || 'hls'})</option>`).join('');
+	} catch (err) {
+		console.error('加载计划流列表失败:', err);
+	}
+}
+
+/**
+ * 初始化统计页事件
+ */
+function initStatisticsEvents() {
+	// 加载统计用流列表
+	loadStatsStreamsList();
+	
+	// 刷新按钮
+	const refreshBtn = document.getElementById('stats-refresh-btn');
+	if (refreshBtn) {
+		refreshBtn.addEventListener('click', () => loadStatistics());
+	}
+	
+	// 流选择变化
+	const streamSelect = document.getElementById('stats-stream-select');
+	if (streamSelect) {
+		streamSelect.addEventListener('change', () => loadStatistics());
+	}
+}
+
+/**
+ * 加载统计页用的流列表
+ */
+async function loadStatsStreamsList() {
+	const select = document.getElementById('stats-stream-select');
+	if (!select) return;
+	
+	try {
+		const result = await getStreamsList();
+		const streams = result?.streams || result?.data || [];
+		
+		// 保留第一个"全部"选项
+		select.innerHTML = '<option value="">全部直播流</option>' +
+			streams.map(s => `<option value="${s.id}">${s.name || 'Unnamed'}</option>`).join('');
+	} catch (err) {
+		console.error('加载统计流列表失败:', err);
 	}
 }
 
@@ -2603,10 +2888,14 @@ function initMultiLiveFeatures() {
 	}, 10000);
 }
 
+
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', () => {
 	// 延迟初始化，等待其他组件加载完成
 	setTimeout(() => {
 		initMultiLiveFeatures();
+		initCreateUserEvents();
+		initScheduleEvents();
+		initStatisticsEvents();
 	}, 1000);
 });
