@@ -317,3 +317,7 @@
 🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
 🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
 🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
