@@ -108,6 +108,25 @@ function getAuthToken() {
 	return null;
 }
 
+// 管理员登录
+async function adminLogin(username, password) {
+	const result = await apiRequest('/api/admin/login', {
+		method: 'POST',
+		body: JSON.stringify({ username, password })
+	});
+	if (result && result.token) {
+		localStorage.setItem('admin_token', result.token);
+	}
+	return result;
+}
+
+// 管理员退出
+function adminLogout() {
+	localStorage.removeItem('admin_token');
+	sessionStorage.removeItem('admin_token');
+	window.location.reload();
+}
+
 async function apiRequest(endpoint, options = {}) {
 	const API_BASE = getAPIBase();
 	const url = `${API_BASE}${endpoint}`;
@@ -119,7 +138,7 @@ async function apiRequest(endpoint, options = {}) {
 	};
 	
 	// 如果是v1接口，添加认证token（如果存在）
-	if (endpoint.startsWith('/api/v1/')) {
+	if (endpoint.startsWith('/api/')) {
 		const token = getAuthToken();
 		if (token) {
 			headers['Authorization'] = `Bearer ${token}`;

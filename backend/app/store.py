@@ -46,6 +46,7 @@ debate_topic: dict[str, str] = {
 }
 
 users: list[dict[str, Any]] = []
+admin_tokens: dict[str, dict[str, str]] = {}
 
 streams: list[dict[str, Any]] = [
     {

@@ -1,13 +1,25 @@
 import time
+import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 
 from .. import store
-from ..config import WECHAT_USE_MOCK
+from ..config import WECHAT_USE_MOCK, ADMIN_USERNAME, ADMIN_PASSWORD
 from ..models import WechatLoginReq
 from ..responses import ok, fail
 
 router = APIRouter(prefix="/api", tags=["auth"])
+
+
+@router.post("/admin/login")
+async def admin_login(req: dict = Body(default={})):
+    username = req.get("username", "")
+    password = req.get("password", "")
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        token = str(uuid.uuid4())
+        store.admin_tokens[token] = {"username": username, "login_time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+        return ok({"token": token, "admin": {"username": username}}, message="登录成功")
+    return fail("用户名或密码错误", 401)
 
 
 @router.post("/wechat-login")
