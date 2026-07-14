@@ -51,23 +51,25 @@ zy/
 
 ### 主要接口（全部支持 `stream_id` 多流隔离）
 
-| 功能 | 方法 | 路径 |
-| --- | --- | --- |
-| 实时票数（按流） | GET | `/api/votes?stream_id=` |
-| 辩题 | GET | `/api/debate-topic?stream_id=` |
-| AI 观点 | GET | `/api/ai-content?stream_id=` |
-| 用户投票（兼容 `request` 包装） | POST | `/api/user-vote` |
-| 微信登录(mock) | POST | `/api/wechat-login` |
-| 评论/点赞 | POST | `/api/comment`、`/api/like` |
-| 直播控制 | POST | `/api/admin/live/start`、`/stop` |
-| 直播流管理 | GET/POST/PUT/DELETE | `/api/admin/streams` |
-| 评委配置 | GET/POST | `/api/admin/judges?stream_id=` |
-| 辩论流程 | GET/POST | `/api/admin/debate-flow?stream_id=` |
-| 流程控制命令 | POST | `/api/admin/debate-flow/control` |
-| 后台仪表盘 | GET | `/api/admin/dashboard?stream_id=` |
+| 功能 | 方法 | 路径 | 描述 |
+| --- | --- | --- | --- |
+| 实时票数（按流） | GET | `/api/votes?stream_id=` | 获取指定直播流的实时票数 |
+| 辩题 | GET | `/api/debate-topic?stream_id=` | 获取当前辩论题目信息 |
+| AI 观点 | GET | `/api/ai-content?stream_id=` | 获取 AI 生成的辩论观点列表 |
+| 用户投票 | POST | `/api/user-vote` | 用户对正方/反方进行投票 |
+| 微信登录(mock) | POST | `/api/wechat-login` | 模拟微信小程序登录 |
+| 评论 | POST | `/api/comment` | 对 AI 观点发表评论 |
+| 点赞 | POST | `/api/like` | 对 AI 观点/评论点赞 |
+| 直播控制 | POST | `/api/admin/live/start`、`/stop` | 管理员开始/停止直播 |
+| 直播流管理 | GET/POST/PUT/DELETE | `/api/admin/streams` | 管理员增删改查直播流 |
+| 评委配置 | GET/POST | `/api/admin/judges?stream_id=` | 管理员配置评委信息 |
+| 辩论流程 | GET/POST | `/api/admin/debate-flow?stream_id=` | 管理员配置辩论环节流程 |
+| 流程控制命令 | POST | `/api/admin/debate-flow/control` | 管理员控制流程推进（开始/暂停/恢复/下一步） |
+| 后台仪表盘 | GET | `/api/admin/dashboard?stream_id=` | 综合仪表盘数据（票数、评委、流程、直播状态） |
 
 > 管理后台前端（`Live/admin/admin-api.js`）统一使用 `/api/v1/admin/*` 前缀，后端已通过别名复用同一套 handler（详见 `backend/README.md`）。
-> 完整接口契约见仓库内接口文档；WebSocket 事件：`votes-updated`、`liveStatus`、`debate-updated`、`judges-updated`、`debate-flow-updated`、`debate-flow-control`、`viewers-updated` 等。
+> 
+> WebSocket 事件（`/ws`）：`votes-updated`、`liveStatus`、`debate-updated`、`judges-updated`、`debate-flow-updated`、`debate-flow-control`、`viewers-updated`、`newAIContent`、`aiStatus` 等。
 
 ---
 
@@ -90,6 +92,14 @@ zy/
 - 常驻进程（Railway / Render / VPS）：`uvicorn app.main:app --host 0.0.0.0 --port $PORT`。
 - Serverless（Vercel / Cloudflare）：WebSocket 不支持长连接，需降级为前端轮询 `/api/votes`、`/api/ai-content`。
 - 网关的 `BACKEND_TARGET` 指向后端公网地址即可完成转发。
+
+### 可扩展性思考（Mock → 真实后端）
+
+- **数据持久化**：当前所有数据存储在进程内存 `store.py` 中，重启即丢失。可迁移至 PostgreSQL/MySQL，使用 SQLAlchemy ORM 替换字典操作，`stream_votes`、`users`、`judges` 等映射为关系表。
+- **认证升级**：目前管理员登录为简单 Token 校验，微信登录为 Mock 实现。真实场景应接入 JWT + refresh token 机制，微信侧对接微信开放平台 OAuth 2.0 获取真实 `openid`/`unionid`。
+- **投票去重与防刷**：Mock 阶段未做投票限制，真实环境需按用户 ID + 直播流 ID 去重，结合频率限制（Redis 滑动窗口）防止刷票。
+- **WebSocket 水平扩展**：单进程 WebSocket 无法跨实例广播。引入 Redis Pub/Sub 作为消息中间件，多实例共享同一频道，实现横向扩展。
+- **AI 观点**：当前为预设文本随机挑选，可接入 LLM API（如 OpenAI/文心一言）实时生成辩论观点，提升互动体验。
 
 ---
 

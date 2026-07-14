@@ -2,7 +2,7 @@
 
 基于 **FastAPI** 实现的直播辩论系统后端，使用内存 **Mock 数据** 模拟全部业务逻辑，对外提供 REST API 与 WebSocket 实时通信。网关（`live-gateway`）将 `/api/*` 与 `/ws` 转发到此服务。
 
-> 接口契约以仓库根目录 **`接口文档2.md`（多流版 v2.0）** 为准：全面支持**多直播流独立隔离**（`streamId`），评委、辩论流程、按流票数、WS 事件统一携带 `streamId`。
+> 全面支持**多直播流独立隔离**（`streamId`），评委、辩论流程、按流票数、WS 事件统一携带 `streamId`。
 
 ## 技术栈
 
@@ -53,7 +53,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 3000
 - 自动交互文档（Swagger）：`http://localhost:3000/docs`
 - WebSocket：`ws://localhost:3000/ws`
 
-## 主要接口（详见仓库根目录 `接口文档2.md`，全部支持 `stream_id`）
+## 主要接口（全部支持 `stream_id`）
 
 | 功能 | 方法 | 路径 |
 | --- | --- | --- |
