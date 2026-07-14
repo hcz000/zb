@@ -12,12 +12,18 @@ router = APIRouter(prefix="/api", tags=["debate"])
 
 @router.get("/debate-topic")
 async def get_topic(stream_id: str | None = None):
-    return ok({**store.debate_topic, "streamId": stream_id})
+    d = store.get_stream_debate(stream_id) if stream_id else None
+    if d is None:
+        d = store.debate_topic
+    return ok({**d, "streamId": stream_id})
 
 
 @router.get("/admin/debate")
 async def get_debate(stream_id: str | None = None):
-    return ok({**store.debate_topic, "streamId": stream_id})
+    d = store.get_stream_debate(stream_id) if stream_id else None
+    if d is None:
+        d = store.debate_topic
+    return ok({**d, "streamId": stream_id})
 
 
 @router.put("/admin/debate")

@@ -669,6 +669,12 @@ function loadPageData(page) {
 		case 'stream-manage':
 			loadStreamsList();
 			break;
+		case 'judges':
+			// 每次进入评委管理页都重新拉取直播流，避免下拉为空（DOMContentLoaded 时异步拉取可能未就绪）
+			if (typeof loadStreamsForJudges === 'function') {
+				loadStreamsForJudges();
+			}
+			break;
 		case 'ai-content':
 			loadAIContent();
 			// 🔧 新增：初始化时查询当前选中流的 AI 状态

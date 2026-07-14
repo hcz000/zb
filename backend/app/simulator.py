@@ -16,9 +16,9 @@ async def vote_loop():
     """直播进行中每 3 秒随机增加票数并广播。"""
     while True:
         await asyncio.sleep(3)
-    if store.live_status["isLive"]:
-        sid = store.live_status.get("streamId") or store._active_stream_id()
-        v = store.stream_votes.setdefault(sid, {"leftVotes": 0, "rightVotes": 0})
+        if store.live_status["isLive"]:
+            sid = store.live_status.get("streamId") or store._active_stream_id()
+            v = store.stream_votes.setdefault(sid, {"leftVotes": 0, "rightVotes": 0})
         v["leftVotes"] += random.randint(1, 5)
         v["rightVotes"] += random.randint(1, 5)
         await manager.broadcast("votes-updated", store.votes_dict(sid))
@@ -32,9 +32,11 @@ async def ai_loop():
         await asyncio.sleep(15)
         if store.live_status["isLive"]:
             item = random.choice(NEW_CONTENTS)
+            sid = store.live_status.get("streamId") or store._active_stream_id()
             content = {
                 "id": store.uid(),
                 "debate_id": store.debate_topic["id"],
+                "streamId": sid,
                 "text": item["text"],
                 "side": item["side"],
                 "timestamp": store.now_ms(),

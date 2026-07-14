@@ -1,0 +1,156 @@
+
+═══════════════════════════════════════
+📋 服务器配置信息
+═══════════════════════════════════════
+模式: 🌐 真实服务器
+地址: http://192.168.31.249:8080
+微信登录: 真实模式
+微信 AppID: wx94289b0d2ca7a802
+微信 Secret: 10409c11...
+═══════════════════════════════════════
+🌉 反向代理模式: /api 与 /ws -> http://localhost:8000
+🖥️  前端页面: http://localhost:8080/
+状态: ✅ 网关运行中
+═══════════════════════════════════════
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔌 代理 WS /ws -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/judges?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/judges?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔌 代理 WS /ws -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/judges?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/judges?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔌 代理 WS /ws -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/judges?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/judges?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 POST /api/v1/admin/live/start -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/ai-content/list?page=1&pageSize=20 -> http://localhost:8000
+🔀 代理 POST /api/v1/admin/live/stop -> http://localhost:8000
+🔀 代理 GET /api/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/live/viewers?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/judges?stream_id=stream-default-001 -> http://localhost:8000
+🔌 代理 WS /ws -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/streams -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 POST /api/v1/admin/live/update-votes -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/v1/admin/dashboard?stream_id=stream-default-001 -> http://localhost:8000
+🔀 代理 GET /api/admin/debate-flow?stream_id=stream-default-001 -> http://localhost:8000

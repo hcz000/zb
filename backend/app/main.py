@@ -61,7 +61,7 @@ for r in (
 # ---------------- /api/v1/admin/* 别名（兼容 admin-api.js 使用的前缀） ----------------
 # 直接复用现有 handler，逻辑与广播行为完全统一，不重复实现。
 from app.routers import statistics as _statistics, live as _live, votes as _votes
-from app.routers import streams as _streams, ai as _ai, auth as _auth, debate as _debate
+from app.routers import streams as _streams, ai as _ai, auth as _auth, debate as _debate, judges as _judges
 
 _V1_ALIASES = [
     ("/api/v1/admin/dashboard", ["GET"], _statistics.dashboard),
@@ -85,6 +85,8 @@ _V1_ALIASES = [
     ("/api/v1/admin/debates", ["POST"], _debate.create_debate_endpoint),
     ("/api/v1/admin/debates/{debate_id}", ["GET"], _debate.get_debate_endpoint),
     ("/api/v1/admin/debates/{debate_id}", ["PUT"], _debate.update_debate_endpoint),
+    ("/api/v1/admin/judges", ["GET"], _judges.get_judges),
+    ("/api/v1/admin/judges", ["POST"], _judges.save_judges),
 ]
 for _path, _methods, _ep in _V1_ALIASES:
     app.add_api_route(_path, _ep, methods=_methods, include_in_schema=False)

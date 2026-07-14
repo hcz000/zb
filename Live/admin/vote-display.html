@@ -1059,14 +1059,30 @@
 			}
 		}
 
-		// 批量更新评委信息
+		// 批量更新评委信息（后端评委含 leftVotes/rightVotes，映射为单个 votes 展示）
 		function setJudges(data = []) {
 			if (!Array.isArray(data) || data.length === 0) return;
 			judgeState = data.map((item, idx) => ({
 				...DEFAULT_JUDGES[idx],
-				...item
+				...item,
+				votes: (Number(item.leftVotes) || 0) + (Number(item.rightVotes) || 0)
 			}));
 			renderJudges(judgeState);
+		}
+
+		// 从后端拉取当前流的评委配置
+		async function loadJudges(streamId) {
+			if (!streamId) return;
+			try {
+				const res = await fetch(`${getAPIBase()}/api/v1/admin/judges?stream_id=${encodeURIComponent(streamId)}`);
+				const result = await res.json();
+				const judges = result?.data?.judges || result?.judges || result?.data || [];
+				if (Array.isArray(judges) && judges.length > 0) {
+					setJudges(judges);
+				}
+			} catch (error) {
+				console.error('❌ 加载评委数据失败:', error);
+			}
 		}
 
 		// 格式化时间显示（MM:SS）
@@ -1248,12 +1264,65 @@
 				timerState.currentSegmentIndex = -1;
 				timerState.remainingSeconds = 0;
 				updateTimerDisplay();
-				updateSegmentInfo();
-				updateButtonStates();
-			}
+			updateSegmentInfo();
+			updateButtonStates();
 		}
+	}
 
-		// 加载直播流列表
+	// 从指定环节开始计时
+	function startSegment(segmentIndex) {
+		stopTimer();
+		if (segmentIndex == null || segmentIndex < 0 || segmentIndex >= DEBATE_SEGMENTS.length) {
+			segmentIndex = 0;
+		}
+		timerState.currentSegmentIndex = segmentIndex;
+		const segment = DEBATE_SEGMENTS[segmentIndex];
+		timerState.remainingSeconds = segment.duration;
+		timerState.isPaused = false;
+		updateTimerDisplay();
+		updateSegmentInfo();
+		updateButtonStates();
+		startTimer();
+	}
+
+	// 重置整个辩论流程（计时器与环节状态）
+	function resetDebate() {
+		stopTimer();
+		timerState.currentSegmentIndex = -1;
+		timerState.remainingSeconds = 0;
+		timerState.isPaused = false;
+		updateTimerDisplay();
+		updateSegmentInfo();
+		updateButtonStates();
+	}
+
+	// 执行后台下发的流程控制命令
+	function handleDebateControl(action, segmentIndex) {
+		switch (action) {
+			case 'start':
+				startSegment(segmentIndex);
+				break;
+			case 'pause':
+				if (timerState.isRunning) toggleTimer();
+				break;
+			case 'resume':
+				resumeTimer();
+				break;
+			case 'reset':
+				resetDebate();
+				break;
+			case 'next':
+				nextSegment();
+				break;
+			case 'prev':
+				previousSegment();
+				break;
+			default:
+				console.warn('⚠️ 未知的流程控制命令:', action);
+		}
+	}
+
+	// 加载直播流列表
 		async function loadStreamsList() {
 			try {
 				const response = await fetch(`${getAPIBase()}/api/v1/admin/streams`);
@@ -1300,6 +1369,7 @@
 				if (selectedStreamId) {
 					currentStreamId = selectedStreamId;
 					await loadVotes(selectedStreamId);
+					await loadJudges(selectedStreamId);
 				}
 
 				select.addEventListener('change', async (e) => {
@@ -1310,6 +1380,7 @@
 						url.searchParams.set('stream_id', streamId);
 						window.history.pushState({}, '', url);
 						await loadVotes(streamId);
+						await loadJudges(streamId);
 					}
 				});
 			} catch (error) {
@@ -1365,14 +1436,15 @@
 		 */
 		async function loadDebateFlowConfig(streamId) {
 			try {
-				const response = await fetch(`${getAPIBase()}/api/admin/debate-flow?stream_id=${streamId}`);
-				const result = await response.json();
-				
-				if (result && result.segments && Array.isArray(result.segments) && result.segments.length > 0) {
-					// 更新全局 DEBATE_SEGMENTS
-					DEBATE_SEGMENTS = result.segments;
-					console.log('✅ 已加载自定义辩论流程配置:', DEBATE_SEGMENTS);
-				} else {
+			const response = await fetch(`${getAPIBase()}/api/admin/debate-flow?stream_id=${streamId}`);
+			const result = await response.json();
+			const flow = result?.data?.flow || result?.flow || [];
+
+			if (Array.isArray(flow) && flow.length > 0) {
+				// 更新全局 DEBATE_SEGMENTS
+				DEBATE_SEGMENTS = flow;
+				console.log('✅ 已加载自定义辩论流程配置:', DEBATE_SEGMENTS);
+			} else {
 					console.warn('⚠️ 使用默认辩论流程配置');
 				}
 			} catch (error) {
@@ -1476,23 +1548,40 @@
 					updateVotesDisplay(votes.leftVotes, votes.rightVotes, totalVotes, leftPercentage, rightPercentage);
 				}
 			}
-			// 🔧 新增：处理辩论流程更新事件
-			else if (message.type === 'debate-flow-updated') {
-				const flowData = message.data || message;
-				// 检查是否是当前流的更新
-				if (flowData.streamId === currentStreamId && flowData.segments) {
-					console.log('📢 接收到辩论流程更新:', flowData);
-					DEBATE_SEGMENTS = flowData.segments;
-					alert('✅ 辩论流程已更新！');
+		// 🔧 新增：处理辩论流程更新事件
+		else if (message.type === 'debate-flow-updated') {
+			const flowData = message.data || message;
+			// 检查是否是当前流的更新
+			if (flowData.streamId === currentStreamId) {
+				const flow = flowData.flow || [];
+				if (Array.isArray(flow) && flow.length > 0) {
+					console.log('📢 接收到辩论流程更新:', flow);
+					DEBATE_SEGMENTS = flow;
+					// 当前没有进行计时时，刷新环节显示
+					if (!timerState.isRunning) {
+						updateSegmentInfo();
+					}
 				}
 			}
-			// 🔧 新增：处理辩论流程控制命令事件
-			else if (message.type === 'debate-flow-control') {
-				const controlData = message.data || message;
-				// 检查是否是当前流的控制
-				if (controlData.streamId === currentStreamId) {
-					console.log('📢 接收到流程控制命令:', controlData.action);
-					// 可在此处处理控制命令，如自动开始计时等
+		}
+		// 🔧 新增：处理辩论流程控制命令事件
+		else if (message.type === 'debate-flow-control') {
+			const controlData = message.data || message;
+			// 检查是否是当前流的控制
+			if (controlData.streamId === currentStreamId) {
+				console.log('📢 接收到流程控制命令:', controlData.action);
+				handleDebateControl(controlData.action, controlData.segmentIndex);
+			}
+		}
+			// 🔧 新增：处理评委更新事件（后台保存评委后实时刷新大屏）
+			else if (message.type === 'judges-updated') {
+				const jd = message.data || message;
+				if (!jd.streamId || jd.streamId === currentStreamId) {
+					const judges = jd.judges || [];
+					if (Array.isArray(judges) && judges.length > 0) {
+						console.log('📢 接收到评委更新:', judges);
+						setJudges(judges);
+					}
 				}
 			}
 		}

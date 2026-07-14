@@ -3,12 +3,17 @@
 
 // 服务器配置（从admin.js继承）
 const getAPIBase = () => {
-	// 优先使用admin.js中的配置
+	// 优先使用页面同源地址（window.location.origin），避免跨域（CORS）导致 fetch 失败。
+	// 这样无论用 localhost / 127.0.0.1 / 局域网 IP 打开页面，请求始终同源。
+	if (window.location && window.location.origin && /^https?:\/\//.test(window.location.origin)) {
+		return window.location.origin;
+	}
+	// 回退：使用admin.js中的配置
 	if (window.SERVER_CONFIG && window.SERVER_CONFIG.BASE_URL) {
 		return window.SERVER_CONFIG.BASE_URL;
 	}
-	// 默认使用真实后端服务器（如果admin.js未加载）
-	return 'http://192.140.160.119:8000';
+	// 最终回退到本地网关地址
+	return 'http://localhost:8080';
 };
 
 // 📋 说明：当前配置

@@ -82,7 +82,11 @@ async def ai_toggle(req: AIToggleReq):
 
 @router.delete("/ai/content/{content_id}")
 async def delete_ai_content(content_id: str, body: dict[str, Any] = Body(default={})):
-    await manager.broadcast("aiContentDeleted", {"contentId": content_id, "streamId": None})
+    c = store.find_ai_content(content_id)
+    if not c:
+        return fail("内容不存在", 404)
+    store.ai_contents.remove(c)
+    await manager.broadcast("aiContentDeleted", {"contentId": content_id, "streamId": c.get("streamId"), "updatedBy": "admin"})
     return ok(
         {
             "contentId": content_id,

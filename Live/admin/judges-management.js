@@ -3,9 +3,9 @@
  */
 
 // 全局状态
-let currentJudgeIndex = null; // 当前正在编辑的评委索引
-let currentStreamId = null; // 当前选中的直播流ID
-let judgesData = [
+var currentJudgeIndex = null; // 当前正在编辑的评委索引
+window.currentStreamId = null; // 当前选中的直播流ID（挂到 window，规避 let 的 TDZ / 跨脚本作用域问题）
+var judgesData = [
 	{
 		id: 'judge-1',
 		name: '评委一',
@@ -142,22 +142,46 @@ async function loadStreamsForJudges() {
 			}
 		});
 
-		console.log('✅ 加载直播流列表成功');
+		console.log('✅ 加载直播流列表成功:', streams.length, '条');
+
+		// 接口的流已成功加载并填充到下拉，下面的"自动选中"即使出错也不能清空下拉
+		if (streams.length > 0) {
+			try {
+				select.value = streams[0].id;
+				selectStream(streams[0].id);
+			} catch (selErr) {
+				// 自动选中/拉评委失败：下拉仍可用，用户也能手动选；仅记录真实错误
+				console.error('⚠️ 自动选中直播流时出错（下拉已填充，可手动选择）:', selErr, selErr && selErr.stack);
+				window.currentStreamId = streams[0].id; // 至少保证 currentStreamId 已设置
+			}
+		} else {
+			const tip = document.getElementById('judges-current-stream-info');
+			if (tip) {
+				tip.style.display = 'block';
+				tip.style.color = '#e74c3c';
+				tip.innerHTML = '<span style="font-weight:600;">提示：</span>后端未返回任何直播流，请确认后端已启动且 store.py 中配置了直播流。';
+			}
+		}
 	} catch (error) {
-		console.error('❌ 加载直播流列表失败:', error);
+		console.error('❌ 加载直播流列表失败:', error, error && error.stack);
+		const tip = document.getElementById('judges-current-stream-info');
+		if (tip) {
+			tip.style.display = 'block';
+			tip.style.color = '#e74c3c';
+			tip.innerHTML = '<span style="font-weight:600;">加载直播流失败：</span>' + (error && error.message ? error.message : String(error));
+		}
 		showNotification('加载直播流列表失败', 'error');
 	}
 }
 
 /**
- * 处理直播流选择变化
+ * 选中指定直播流（设置 currentStreamId + 显示流信息 + 加载评委）
  */
-function handleStreamChange(e) {
-	const streamId = e.target.value;
-	currentStreamId = streamId;
+function selectStream(streamId) {
+	window.currentStreamId = streamId;
 
-	const select = e.target;
-	const selectedOption = select.options[select.selectedIndex];
+	const select = document.getElementById('judges-stream-select');
+	const selectedOption = select ? select.options[select.selectedIndex] : null;
 	const streamName = selectedOption ? selectedOption.textContent : '-';
 
 	// 显示当前管理的流信息
@@ -178,17 +202,32 @@ function handleStreamChange(e) {
 }
 
 /**
+ * 处理直播流选择变化
+ */
+function handleStreamChange(e) {
+	selectStream(e.target.value);
+}
+
+/**
  * 加载指定直播流的评委数据
  */
 async function loadJudgesDataForStream(streamId) {
 	try {
-		// TODO: 调用后端API获取评委数据
-		// const response = await fetch(`${getAPIBase()}/api/v1/admin/judges?stream_id=${streamId}`);
-		// const result = await response.json();
-		// judgesData = result.data || judgesData;
-
-		// 暂时使用默认数据
-		console.log('📝 加载评委数据 (使用默认数据)');
+		const response = await fetch(`${getAPIBase()}/api/v1/admin/judges?stream_id=${encodeURIComponent(streamId)}`);
+		const result = await response.json();
+		const judges = result?.data?.judges || result?.judges || result?.data || [];
+		if (Array.isArray(judges) && judges.length > 0) {
+			judgesData = judges.map((j) => ({
+				id: j.id || `judge-${judgesData.length + 1}`,
+				name: j.name || '评委',
+				role: j.role || '',
+				avatar: j.avatar || './assets/images/judges/osmanthus.jpg',
+				votes: (Number(j.leftVotes) || 0) + (Number(j.rightVotes) || 0)
+			}));
+			console.log('📝 加载评委数据成功');
+		} else {
+			console.log('📝 无评委数据，使用默认数据');
+		}
 		updateJudgesUI();
 	} catch (error) {
 		console.error('❌ 加载评委数据失败:', error);
@@ -411,7 +450,7 @@ function filterUsers(keyword) {
  * 保存评委数据
  */
 async function saveJudgesData() {
-	if (!currentStreamId) {
+	if (!window.currentStreamId) {
 		showNotification('请先选择直播流', 'warning');
 		return;
 	}
@@ -435,25 +474,33 @@ async function saveJudgesData() {
 	});
 
 	try {
-		// TODO: 调用后端API保存数据
-		// const response = await fetch(`${getAPIBase()}/api/v1/admin/judges`, {
-		// 	method: 'POST',
-		// 	headers: { 'Content-Type': 'application/json' },
-		// 	body: JSON.stringify({
-		// 		stream_id: currentStreamId,
-		// 		judges: updatedJudges
-		// 	})
-		// });
+		// 将本地单 votes 字段映射为后端 leftVotes/rightVotes（后端 JudgesSaveReq 用 streamId 字段）
+		const payload = updatedJudges.map((j) => ({
+			id: j.id,
+			name: j.name,
+			role: j.role,
+			avatar: j.avatar,
+			leftVotes: Number(j.votes) || 0,
+			rightVotes: 0
+		}));
+		const response = await fetch(`${getAPIBase()}/api/v1/admin/judges`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				streamId: window.currentStreamId,
+				judges: payload
+			})
+		});
+		if (!response.ok) {
+			throw new Error(`保存失败: ${response.status}`);
+		}
 
-		// 暂时只更新本地数据
 		judgesData = updatedJudges;
 		console.log('💾 保存评委数据:', judgesData);
 
 		showNotification('评委信息保存成功', 'success');
 
-		// TODO: 通知大屏幕更新
-		notifyVoteDisplayUpdate();
-
+		// 后端已通过 WebSocket 广播 judges-updated，大屏会自动刷新，无需手动通知
 	} catch (error) {
 		console.error('❌ 保存评委数据失败:', error);
 		showNotification('保存失败,请重试', 'error');
@@ -479,18 +526,13 @@ function showNotification(message, type = 'info') {
 	alert(message);
 }
 
-/**
- * 获取API基础地址
- */
-function getAPIBase() {
-	if (window.SERVER_CONFIG && window.SERVER_CONFIG.BASE_URL) {
-		return window.SERVER_CONFIG.BASE_URL;
-	}
-	return 'http://localhost:8081';
-}
+
+// 注意：getAPIBase 由 admin-api.js 统一定义（全局 const），本文件直接复用，
+// 不再重复声明，避免 "Identifier 'getAPIBase' has already been declared" 导致本脚本整段不执行。
 
 // 导出函数供外部使用
 if (typeof window !== 'undefined') {
 	window.initJudgesManagement = initJudgesManagement;
+	window.loadStreamsForJudges = loadStreamsForJudges;
 	window.judgesData = judgesData;
 }

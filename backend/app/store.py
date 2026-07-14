@@ -131,6 +131,7 @@ ai_contents: list[dict[str, Any]] = [
     {
         "id": uid(),
         "debate_id": debate_topic["id"],
+        "streamId": "stream-default-001",
         "text": "正方观点：痛苦是人生成长的必要经历，消除痛苦会让我们失去学习和成长的机会。",
         "side": "left",
         "timestamp": now_ms() - 300000,
@@ -143,6 +144,7 @@ ai_contents: list[dict[str, Any]] = [
     {
         "id": uid(),
         "debate_id": debate_topic["id"],
+        "streamId": "stream-default-001",
         "text": "反方观点：如果能够消除痛苦，为什么不呢？痛苦本身没有价值，消除痛苦可以让人更专注于积极的事情。",
         "side": "right",
         "timestamp": now_ms() - 240000,
@@ -155,6 +157,7 @@ ai_contents: list[dict[str, Any]] = [
     {
         "id": uid(),
         "debate_id": debate_topic["id"],
+        "streamId": "stream-default-001",
         "text": "正方回应：痛苦让我们学会同理心，如果所有人都没有痛苦经历，我们如何理解他人的苦难？",
         "side": "left",
         "timestamp": now_ms() - 180000,
@@ -167,6 +170,7 @@ ai_contents: list[dict[str, Any]] = [
     {
         "id": uid(),
         "debate_id": debate_topic["id"],
+        "streamId": "stream-default-001",
         "text": "反方回应：我们可以通过其他方式培养同理心，比如阅读、教育。消除痛苦不等于消除所有负面情绪。",
         "side": "right",
         "timestamp": now_ms() - 120000,
@@ -179,6 +183,7 @@ ai_contents: list[dict[str, Any]] = [
     {
         "id": uid(),
         "debate_id": debate_topic["id"],
+        "streamId": "stream-default-001",
         "text": "正方总结：痛苦是人性的一部分，消除痛苦可能会让我们失去作为人的完整性。",
         "side": "left",
         "timestamp": now_ms() - 60000,

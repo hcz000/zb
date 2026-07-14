@@ -51,13 +51,19 @@ def _content_to_doc(item: dict) -> dict:
 
 
 @router.get("/ai-content")
-async def list_ai():
-    return ok(store.ai_contents)
+async def list_ai(stream_id: str | None = None):
+    items = store.ai_contents
+    if stream_id:
+        items = [c for c in items if c.get("streamId") == stream_id]
+    return ok(items)
 
 
 @router.get("/admin/ai-content")
-async def admin_list_ai():
-    return ok(store.ai_contents)
+async def admin_list_ai(stream_id: str | None = None):
+    items = store.ai_contents
+    if stream_id:
+        items = [c for c in items if c.get("streamId") == stream_id]
+    return ok(items)
 
 
 @router.get("/admin/ai-content/list")
