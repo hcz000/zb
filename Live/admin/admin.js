@@ -13,12 +13,13 @@ const SERVER_CONFIG = {
 	LOCAL_GATEWAY_URL: 'http://localhost:8080',
 	// 当前使用的地址（修改这里切换服务器）
 	get BASE_URL() {
-		// 🔧 配置：通过网关反向代理访问（开发用 LOCAL_GATEWAY_URL，部署用 GATEWAY_URL）
-		return this.GATEWAY_URL; // 走网关
+		// 同源访问：页面由网关托管，直接用当前页面来源（window.location.origin），
+		// 部署到任意地址（localhost / 局域网 IP / 公网域名）都自动适配，无需再改 IP。
+		return window.location.origin;
 	},
 	get WEB_SOCKET_URL() {
-		// 🔧 配置：WebSocket 也经网关（/ws 由网关代理到后端）
-		return this.GATEWAY_URL; // 使用网关
+		// WebSocket 同样走同源：ws/wss 协议由 initWebSocket 按 origin 自动推导。
+		return window.location.origin;
 	}
 };
 
