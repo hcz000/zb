@@ -45,7 +45,7 @@ app.add_middleware(
 
 
 # ---- 管理员认证中间件 ----
-# 无需认证的只读公开接口（观众观看页需要）
+# 无需认证的只读公开接口（大屏、观众观看页需要读取数据）
 _PUBLIC_READONLY_PATHS = {
     "/api/admin/dashboard",
     "/api/v1/admin/dashboard",
@@ -55,6 +55,12 @@ _PUBLIC_READONLY_PATHS = {
 _PUBLIC_PREFIXES = (
     "/api/admin/dashboard",
     "/api/v1/admin/dashboard",
+    "/api/admin/streams",
+    "/api/v1/admin/streams",
+    "/api/admin/judges",
+    "/api/v1/admin/judges",
+    "/api/admin/debate-flow",
+    "/api/v1/admin/debate-flow",
 )
 
 
