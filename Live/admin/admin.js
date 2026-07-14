@@ -1384,15 +1384,32 @@ document.getElementById('setup-schedule-btn')?.addEventListener('click', async (
 	}
 });
 
-// 加载直播流列表到选择框
+// 广播当前选中的流ID到所有选择器（页面级选择器 ↔ 顶栏选择器）
+function broadcastStreamSelection(streamId) {
+	const pageSelect = document.getElementById('stream-select');
+	const topbarSelect = document.getElementById('topbar-stream-select');
+	if (pageSelect && pageSelect.value !== streamId) {
+		pageSelect.value = streamId;
+		try { pageSelect.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+	}
+	if (topbarSelect && topbarSelect.value !== streamId) {
+		topbarSelect.value = streamId;
+		// 高亮提示：未选择流时标红
+		if (!streamId) {
+			topbarSelect.classList.add('no-selection');
+		} else {
+			topbarSelect.classList.remove('no-selection');
+		}
+	}
+}
+
+// 加载直播流列表到选择框（页面级 + 顶栏）
 async function loadStreamsToSelect() {
 	try {
 		const streamSelect = document.getElementById('stream-select');
-		if (!streamSelect) return;
-		
-		// 先显示加载中
-		streamSelect.innerHTML = '<option value="">加载中...</option>';
-		
+		const topbarSelect = document.getElementById('topbar-stream-select');
+		if (!streamSelect && !topbarSelect) return;
+
 		const result = await getStreamsList();
 		
 		// 处理返回数据，可能是数组或者包含data字段的对象
@@ -1405,83 +1422,110 @@ async function loadStreamsToSelect() {
 			streams = result.streams || result.items || result.list || [];
 		}
 		
-		// 清空选择框
-		streamSelect.innerHTML = '<option value="">使用默认启用的直播流</option>';
-		
+		// 构建选项 HTML（两个选择器共用）
+		const optionsHtml = ['<option value="">请选择直播流</option>'];
 		if (streams.length === 0) {
-			streamSelect.innerHTML += '<option value="" disabled>暂无可用的直播流</option>';
-			return;
+			optionsHtml.push('<option value="" disabled>暂无可用的直播流</option>');
+		} else {
+			streams.forEach(stream => {
+				const label = `${stream.name} (${stream.type?.toUpperCase() || 'HLS'})${stream.enabled ? '' : ' [已禁用]'}`;
+				optionsHtml.push(`<option value="${escapeHtml(stream.id)}">${escapeHtml(label)}</option>`);
+			});
+		}
+		const optionsStr = optionsHtml.join('');
+		
+		// 填充页面级选择器
+		if (streamSelect) {
+			streamSelect.innerHTML = optionsStr;
 		}
 		
-		// 填充直播流选项
-		streams.forEach(stream => {
-			const option = document.createElement('option');
-			option.value = stream.id;
-			option.textContent = `${stream.name} (${stream.type?.toUpperCase() || 'HLS'})${stream.enabled ? ' [已启用]' : ''}`;
-			streamSelect.appendChild(option);
-		});
-		
-		// 如果有启用的流，默认选中第一个启用的流
-		const activeStream = streams.find(s => s.enabled === true);
-		if (activeStream && streamSelect) {
-			streamSelect.value = activeStream.id;
-			updateSelectedStreamInfo(activeStream);
-			// 🔧 修复：默认选择流后，重新加载该流的 Dashboard 数据
-			console.log(`🔄 默认选择流 ${activeStream.id}，重新加载 Dashboard...`);
-			loadDashboard();
-		}
-		
-		// 移除旧的监听器，避免重复绑定
-		const oldStreamSelect = document.getElementById('stream-select');
-		if (oldStreamSelect && oldStreamSelect === streamSelect) {
-			// 克隆节点并替换，这样可以移除所有旧的事件监听器
-			const newStreamSelect = oldStreamSelect.cloneNode(true);
+		// 填充顶栏选择器
+		let topbarSelectEl = topbarSelect;
+		if (topbarSelect) {
+			topbarSelect.innerHTML = optionsStr;
 			
-			// 如果有启用的流，确保新选择框也选中
-			if (activeStream) {
-				newStreamSelect.value = activeStream.id;
-			}
+			// 移除旧监听器（克隆替换）
+			const newTopbar = topbarSelect.cloneNode(true);
+			topbarSelect.parentNode.replaceChild(newTopbar, topbarSelect);
+			topbarSelectEl = newTopbar;
 			
-			oldStreamSelect.parentNode.replaceChild(newStreamSelect, oldStreamSelect);
-			
-			// 🔧 修复：如果新节点有选中的流，重新加载该流的 Dashboard
-			if (activeStream && newStreamSelect.value === activeStream.id) {
-				console.log(`🔄 替换节点后，重新加载流 ${activeStream.id} 的 Dashboard...`);
-				loadDashboard();
-			}
-			
-			// 监听选择变化
-			newStreamSelect.addEventListener('change', async (e) => {
+			// 顶栏选择器变化时，同步到页面选择器
+			newTopbar.addEventListener('change', async (e) => {
 				const selectedId = e.target.value;
+				broadcastStreamSelection(selectedId);
+				
 				if (selectedId) {
-					const selectedStream = streams.find(s => s.id === selectedId);
-					if (selectedStream) {
-						updateSelectedStreamInfo(selectedStream);
-						// 🔧 修复：选择流后重新加载 Dashboard，显示该流的票数
-						console.log(`🔄 切换到流 ${selectedId}，重新加载 Dashboard...`);
-						await loadDashboard();
-					} else {
-						hideSelectedStreamInfo();
-					}
+					const stream = streams.find(s => s.id === selectedId);
+					if (stream) updateSelectedStreamInfo(stream);
+					if (typeof loadDashboard === 'function') await loadDashboard();
+					// 同步更新其他按流管理的页面（评委、辩题等）
+					if (typeof loadVotesByStream === 'function') loadVotesByStream(selectedId);
 				} else {
 					hideSelectedStreamInfo();
-					// 🔧 修复：取消选择后重新加载默认 Dashboard
-					console.log('🔄 取消选择流，重新加载默认 Dashboard...');
-					await loadDashboard();
 				}
 			});
+		}
+		
+		// 默认选中第一个启用的流
+		const activeStream = streams.find(s => s.enabled === true);
+		const defaultId = activeStream ? activeStream.id : '';
+		
+		if (streamSelect) streamSelect.value = defaultId;
+		if (activeStream) updateSelectedStreamInfo(activeStream);
+		
+		// 同步顶栏选择器
+		if (topbarSelectEl) {
+			topbarSelectEl.value = defaultId;
+			if (!defaultId) topbarSelectEl.classList.add('no-selection');
+			else topbarSelectEl.classList.remove('no-selection');
+		}
+		
+		// 移除页面级选择器旧监听器
+		if (streamSelect) {
+			const oldStreamSelect = document.getElementById('stream-select');
+			if (oldStreamSelect && oldStreamSelect === streamSelect) {
+				const newStreamSelect = oldStreamSelect.cloneNode(true);
+				newStreamSelect.value = defaultId;
+				oldStreamSelect.parentNode.replaceChild(newStreamSelect, oldStreamSelect);
+				
+				if (activeStream && defaultId) {
+					console.log(`🔄 默认选择流 ${defaultId}，重新加载 Dashboard...`);
+					loadDashboard();
+				}
+				
+				// 页面选择器变化时，同步到顶栏
+				newStreamSelect.addEventListener('change', async (e) => {
+					const selectedId = e.target.value;
+					broadcastStreamSelection(selectedId);
+					
+					if (selectedId) {
+						const selectedStream = streams.find(s => s.id === selectedId);
+						if (selectedStream) {
+							updateSelectedStreamInfo(selectedStream);
+							console.log(`🔄 切换到流 ${selectedId}，重新加载 Dashboard...`);
+							await loadDashboard();
+						} else {
+							hideSelectedStreamInfo();
+						}
+					} else {
+						hideSelectedStreamInfo();
+						console.log('🔄 取消选择流，重新加载默认 Dashboard...');
+						await loadDashboard();
+					}
+				});
+			}
 		}
 		
 		// 保存 streams 到全局变量，方便后续使用
 		window.liveSetupStreams = streams;
 		
-		console.log('✅ 直播流列表已加载到选择框');
+		console.log('✅ 直播流列表已加载到选择框（页面 + 顶栏）');
 	} catch (error) {
 		console.error('❌ 加载直播流列表失败:', error);
 		const streamSelect = document.getElementById('stream-select');
-		if (streamSelect) {
-			streamSelect.innerHTML = '<option value="">加载失败，请刷新重试</option>';
-		}
+		const topbarSelect = document.getElementById('topbar-stream-select');
+		if (streamSelect) streamSelect.innerHTML = '<option value="">加载失败，请刷新重试</option>';
+		if (topbarSelect) topbarSelect.innerHTML = '<option value="">加载失败，请刷新重试</option>';
 	}
 }
 

@@ -942,9 +942,22 @@ function initLiveControlEvents() {
 					}
 				} else {
 					// 开始直播
-					// 获取选中的直播流ID（从直播控制页面）
-					const streamSelect = document.getElementById('stream-select');
-					const streamId = streamSelect?.value || null; // 如果未选择，使用默认直播流
+					// 获取选中的直播流ID（优先顶栏选择器 → 页面选择器）
+					const topbarSelect = document.getElementById('topbar-stream-select');
+					const pageSelect = document.getElementById('stream-select');
+					const streamId = (topbarSelect?.value || pageSelect?.value || '').trim() || null;
+					
+					// 未选择流时给出明确提示
+					if (!streamId) {
+						alert('⚠️ 请先在顶栏或"直播控制"页面中选择要启动的直播流！\n\n提示：在"直播流管理"中添加流后，返回此页面选择即可。');
+						// 高亮顶栏选择器
+						if (topbarSelect) {
+							topbarSelect.classList.add('no-selection');
+							topbarSelect.focus();
+						}
+						return;
+					}
+					
 					const autoStartAI = confirm('是否同时启动AI识别？');
 					
 					// 立即更新UI（乐观更新）
