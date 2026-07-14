@@ -55,6 +55,8 @@ _PUBLIC_READONLY_PATHS = {
 _PUBLIC_PREFIXES = (
     "/api/admin/dashboard",
     "/api/v1/admin/dashboard",
+    "/api/admin/votes",
+    "/api/v1/admin/votes",
     "/api/admin/streams",
     "/api/v1/admin/streams",
     "/api/admin/judges",
@@ -68,11 +70,13 @@ _PUBLIC_PREFIXES = (
 async def admin_auth_middleware(request: Request, call_next):
     path = request.url.path
     if path.startswith(("/api/admin", "/api/v1/admin")):
+        if request.method == "OPTIONS":
+            return await call_next(request)
         # 放行登录接口
         if path == "/api/admin/login":
             return await call_next(request)
         # 放行 dashboard（观众观看页需要读取直播状态、流地址、票数）
-        if path in _PUBLIC_READONLY_PATHS or path.startswith(_PUBLIC_PREFIXES):
+        if request.method in ("GET", "HEAD") and (path in _PUBLIC_READONLY_PATHS or path.startswith(_PUBLIC_PREFIXES)):
             return await call_next(request)
         auth_header = request.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
@@ -108,6 +112,7 @@ _V1_ALIASES = [
     ("/api/v1/admin/dashboard", ["GET"], _statistics.dashboard),
     ("/api/v1/admin/live/start", ["POST"], _live.live_start),
     ("/api/v1/admin/live/stop", ["POST"], _live.live_stop),
+    ("/api/v1/admin/live/status", ["GET"], _live.live_status),
     ("/api/v1/admin/live/update-votes", ["POST"], _votes.live_update_votes),
     ("/api/v1/admin/live/reset-votes", ["POST"], _votes.live_reset_votes),
     ("/api/v1/admin/live/viewers", ["GET"], _live.get_viewers),

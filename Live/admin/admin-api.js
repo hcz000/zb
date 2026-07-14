@@ -920,8 +920,8 @@ async function saveDebateFlowConfigAPI(streamId, segments) {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				stream_id: streamId,
-				segments: segments
+				streamId: streamId,
+				flow: segments
 			})
 		});
 		
@@ -937,9 +937,10 @@ async function saveDebateFlowConfigAPI(streamId, segments) {
  * 发送辩论流程控制命令
  * @param {string} streamId - 直播流ID
  * @param {string} action - 命令 (start/pause/resume/reset/next/prev)
+ * @param {number} segmentIndex - 起始环节索引
  * @returns {Promise<Object>}
  */
-async function sendDebateFlowControl(streamId, action) {
+async function sendDebateFlowControl(streamId, action, segmentIndex = 0) {
 	try {
 		console.log(`📡 发送流 ${streamId} 的流程控制命令: ${action}...`);
 		
@@ -949,8 +950,9 @@ async function sendDebateFlowControl(streamId, action) {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				stream_id: streamId,
-				action: action
+				streamId: streamId,
+				action: action,
+				segmentIndex: segmentIndex
 			})
 		});
 		

@@ -13,7 +13,7 @@ def dashboard_data(stream_id: str | None = None) -> dict:
     v = store.votes_dict(stream_id)
     sid = v["streamId"]
     active = store.get_active_stream()
-    ls = store.live_status
+    ls = store.live_status_dict(sid)
     live_duration = 0
     if ls["isLive"] and ls.get("startTime"):
         live_duration = max(0, int((store.now_ms() - store._parse_dt(ls["startTime"])) / 1000))

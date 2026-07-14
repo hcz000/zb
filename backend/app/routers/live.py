@@ -116,11 +116,12 @@ async def setup_start(req: dict[str, Any] = Body(default={})):
 @router.get("/admin/live/status")
 async def live_status(stream_id: str | None = None):
     active = store.get_active_stream()
+    status = store.live_status_dict(stream_id)
     return ok(
         {
-            **store.live_status,
+            **status,
             "schedule": store.live_schedule,
-            "streamId": store.live_status.get("streamId") or stream_id,
+            "streamId": status.get("streamId") or stream_id,
             "activeStreamUrl": active["url"] if active else None,
             "activeStreamId": active["id"] if active else None,
             "activeStreamName": active["name"] if active else None,

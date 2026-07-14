@@ -1540,6 +1540,39 @@ function initDebateFlowEvents() {
 			await saveDebateFlowConfig(streamId);
 		});
 	}
+
+	// 大屏流程控制按钮
+	document.querySelectorAll('.debate-flow-control-btn').forEach((btn) => {
+		btn.addEventListener('click', async () => {
+			const action = btn.dataset.action;
+			const streamId = document.getElementById('debate-flow-stream-select')?.value;
+			if (!streamId) {
+				alert('请先选择要控制的直播流');
+				return;
+			}
+			await sendDebateFlowControlFromPage(streamId, action, btn);
+		});
+	});
+}
+
+async function sendDebateFlowControlFromPage(streamId, action, btn) {
+	const startIndexInput = document.getElementById('debate-flow-start-index');
+	const segmentIndex = Math.max(0, (parseInt(startIndexInput?.value, 10) || 1) - 1);
+	const originalHtml = btn.innerHTML;
+	try {
+		btn.disabled = true;
+		btn.textContent = '发送中...';
+		const result = await sendDebateFlowControl(streamId, action, segmentIndex);
+		if (result) {
+			console.log(`✅ 流程控制命令已发送: ${action}`, result);
+		}
+	} catch (error) {
+		console.error('❌ 流程控制命令发送失败:', error);
+		alert('流程控制命令发送失败：' + error.message);
+	} finally {
+		btn.disabled = false;
+		btn.innerHTML = originalHtml;
+	}
 }
 
 /**
@@ -1589,8 +1622,9 @@ async function loadDebateFlowByStream(streamId) {
 		
 		// 从 API 获取流程配置
 		const result = await getDebateFlowConfig(streamId);
+		const segments = result?.segments || result?.flow || result?.data?.segments || result?.data?.flow;
 		
-		if (!result || !result.segments) {
+		if (!Array.isArray(segments)) {
 			console.warn('⚠️ 无法获取流程配置');
 			container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">暂无流程配置，可点击"添加环节"创建新环节</div>';
 			return;
@@ -1607,7 +1641,7 @@ async function loadDebateFlowByStream(streamId) {
 		}
 		
 		// 渲染环节
-		renderDebateSegments(result.segments);
+		renderDebateSegments(segments);
 	} catch (error) {
 		console.error('❌ 加载流程配置失败:', error);
 		const container = document.getElementById('debate-segments-container');

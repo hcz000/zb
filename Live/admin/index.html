@@ -790,6 +790,42 @@
 						</div>
 					</div>
 
+					<!-- 流程控制 -->
+					<div style="background: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+						<h3 style="margin: 0 0 18px 0; color: #2c3e50; display: flex; align-items: center; gap: 8px;">
+							<img src="/static/iconfont/gongjigongju.png" class="icon-img" alt="">
+							大屏流程控制
+						</h3>
+						<div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+							<label for="debate-flow-start-index" style="font-weight: 600; color: #495057;">起始环节</label>
+							<input type="number" id="debate-flow-start-index" class="form-input" min="1" value="1" style="width: 90px; padding: 10px;">
+							<button class="btn btn-success debate-flow-control-btn" data-action="start" style="display: inline-flex; align-items: center; gap: 6px;">
+								<span class="iconfont icon-play">▶</span>
+								开始
+							</button>
+							<button class="btn btn-warning debate-flow-control-btn" data-action="pause" style="display: inline-flex; align-items: center; gap: 6px;">
+								<span class="iconfont icon-pause">Ⅱ</span>
+								暂停
+							</button>
+							<button class="btn btn-info debate-flow-control-btn" data-action="resume" style="display: inline-flex; align-items: center; gap: 6px;">
+								<span class="iconfont icon-play">▶</span>
+								恢复
+							</button>
+							<button class="btn btn-secondary debate-flow-control-btn" data-action="prev" style="display: inline-flex; align-items: center; gap: 6px;">
+								<span class="iconfont icon-left">←</span>
+								上一环节
+							</button>
+							<button class="btn btn-secondary debate-flow-control-btn" data-action="next" style="display: inline-flex; align-items: center; gap: 6px;">
+								<span class="iconfont icon-right">→</span>
+								下一环节
+							</button>
+							<button class="btn btn-danger debate-flow-control-btn" data-action="reset" style="display: inline-flex; align-items: center; gap: 6px;">
+								<span class="iconfont icon-reset">↺</span>
+								重置
+							</button>
+						</div>
+					</div>
+
 					<!-- 预设模板 -->
 					<div style="background: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
 						<h4 style="margin: 0 0 15px 0; color: #0c5460; display: flex; align-items: center; gap: 8px;">

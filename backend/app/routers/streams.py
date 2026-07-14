@@ -78,3 +78,13 @@ async def delete_stream(stream_id: str):
         return fail("该直播流正在使用中，请先停止直播", 400)
     store.streams.remove(s)
     return ok({"id": stream_id, "name": s["name"]}, message="直播流删除成功")
+
+
+@router.post("/streams/{stream_id}/toggle")
+async def toggle_stream(stream_id: str):
+    s = store.get_stream(stream_id)
+    if not s:
+        return fail("直播流不存在", 404)
+    s["enabled"] = not bool(s.get("enabled", True))
+    s["updatedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return ok(s, message="直播流状态已更新")

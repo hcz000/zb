@@ -181,6 +181,57 @@ stream_live_statuses: dict[str, dict[str, Any]] = {}
 live_schedule: dict[str, Any] = {"isScheduled": False, "scheduledStartTime": None, "scheduledEndTime": None, "streamId": None}
 
 
+def _live_status_base() -> dict[str, Any]:
+    return {
+        "isScheduled": live_status.get("isScheduled", False),
+        "scheduledStartTime": live_status.get("scheduledStartTime"),
+        "scheduledEndTime": live_status.get("scheduledEndTime"),
+    }
+
+
+def _sync_global_live_status(preferred_stream_id: str | None = None) -> dict[str, Any]:
+    preferred = None
+    if preferred_stream_id:
+        st = stream_live_statuses.get(preferred_stream_id)
+        if st and st.get("isLive"):
+            preferred = preferred_stream_id
+    if not preferred and live_status.get("streamId"):
+        st = stream_live_statuses.get(live_status["streamId"])
+        if st and st.get("isLive"):
+            preferred = live_status["streamId"]
+    if not preferred:
+        preferred = next((sid for sid, st in stream_live_statuses.items() if st.get("isLive")), None)
+
+    if preferred:
+        st = stream_live_statuses[preferred]
+        stream = get_stream(preferred)
+        live_status.update(
+            isLive=True,
+            streamUrl=st.get("streamUrl") or (stream["url"] if stream else None),
+            streamId=preferred,
+            liveId=st.get("liveId"),
+            startTime=st.get("startTime"),
+        )
+    else:
+        live_status.update(isLive=False, streamUrl=None, streamId=None, liveId=None, startTime=None)
+    return live_status
+
+
+def live_status_dict(stream_id: str | None = None) -> dict[str, Any]:
+    if stream_id:
+        st = stream_live_statuses.get(stream_id, {})
+        return {
+            **_live_status_base(),
+            "isLive": bool(st.get("isLive", False)),
+            "streamUrl": st.get("streamUrl") if st.get("isLive") else None,
+            "streamId": stream_id,
+            "liveId": st.get("liveId"),
+            "startTime": st.get("startTime"),
+            "stopTime": st.get("stopTime"),
+        }
+    return dict(_sync_global_live_status())
+
+
 def _seed_comment(user: str, text: str, avatar: str, likes: int) -> dict[str, Any]:
     return {"id": uid(), "user": user, "text": text, "time": "刚刚", "avatar": avatar, "likes": likes}
 
@@ -401,9 +452,11 @@ def start_live(stream_id: str | None = None) -> dict[str, Any]:
         "isLive": True,
         "liveId": live_id,
         "startTime": start,
+        "stopTime": None,
         "streamUrl": stream["url"],
         "streamName": stream["name"],
     }
+    _sync_global_live_status(stream["id"])
     return {
         "liveId": live_id,
         "streamUrl": stream["url"],
@@ -432,7 +485,7 @@ def stop_live(stream_id: str | None = None) -> dict[str, Any]:
             duration = max(0, int((now_ms() - _parse_dt(start_time)) / 1000))
         live_id = live_status.get("liveId")
     stop = iso_now()
-    live_status.update(isLive=False, streamUrl=None, streamId=None, liveId=None, startTime=None)
+    _sync_global_live_status()
     total_v = 0
     if target and target in stream_votes:
         total_v = stream_votes[target]["leftVotes"] + stream_votes[target]["rightVotes"]
