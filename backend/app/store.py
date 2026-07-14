@@ -45,7 +45,64 @@ debate_topic: dict[str, str] = {
     "rightPosition": "反方",
 }
 
-users: list[dict[str, Any]] = []
+users: list[dict[str, Any]] = [
+    {
+        "id": "user-demo-001",
+        "nickname": "辩论达人",
+        "avatar": "👥",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 128, "totalComments": 15, "totalLikes": 42, "currentPosition": "left"},
+    },
+    {
+        "id": "user-demo-002",
+        "nickname": "理性思考者",
+        "avatar": "🧠",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 96, "totalComments": 22, "totalLikes": 58, "currentPosition": "right"},
+    },
+    {
+        "id": "user-demo-003",
+        "nickname": "吃瓜群众",
+        "avatar": "🍉",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 34, "totalComments": 5, "totalLikes": 10, "currentPosition": "neutral"},
+    },
+    {
+        "id": "user-demo-004",
+        "nickname": "哲学少女",
+        "avatar": "🎀",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 210, "totalComments": 31, "totalLikes": 89, "currentPosition": "left"},
+    },
+    {
+        "id": "user-demo-005",
+        "nickname": "逻辑狂魔",
+        "avatar": "⚡",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 167, "totalComments": 18, "totalLikes": 63, "currentPosition": "right"},
+    },
+    {
+        "id": "user-demo-006",
+        "nickname": "夜猫子",
+        "avatar": "🦉",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 55, "totalComments": 8, "totalLikes": 25, "currentPosition": "left"},
+    },
+    {
+        "id": "user-demo-007",
+        "nickname": "键盘侠",
+        "avatar": "⌨️",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 78, "totalComments": 40, "totalLikes": 12, "currentPosition": "right"},
+    },
+    {
+        "id": "user-demo-008",
+        "nickname": "安静的美男子",
+        "avatar": "🤫",
+        "createdAt": iso_now(),
+        "statistics": {"totalVotes": 12, "totalComments": 0, "totalLikes": 3, "currentPosition": "neutral"},
+    },
+]
 admin_tokens: dict[str, dict[str, str]] = {}
 
 streams: list[dict[str, Any]] = [

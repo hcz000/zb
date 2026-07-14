@@ -59,6 +59,16 @@ async def get_user(user_id: str):
     return ok(u)
 
 
+@router.post("/admin/users")
+async def create_user(req: dict = Body(default={})):
+    nickname = req.get("nickname", "新用户")
+    avatar = req.get("avatar", "👤")
+    user_id = "user-" + str(store.now_ms())
+    store.create_or_update_user(user_id, nickname, avatar)
+    new_user = next((x for x in store.users if x["id"] == user_id), None)
+    return ok(new_user, message="用户创建成功")
+
+
 @router.get("/admin/miniprogram/users")
 async def mp_users(page: int = 1, pageSize: int = 20, status: str = "all", orderBy: str = "joinTime"):
     us = list(store.users)

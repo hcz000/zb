@@ -118,6 +118,7 @@ _V1_ALIASES = [
     ("/api/v1/admin/ai/stop", ["POST"], _ai.ai_stop),
     ("/api/v1/admin/ai/toggle", ["POST"], _ai.ai_toggle),
     ("/api/v1/admin/users", ["GET"], _auth.list_users),
+    ("/api/v1/admin/users", ["POST"], _auth.create_user),
     ("/api/v1/user-vote", ["POST"], _votes.user_vote),
     ("/api/v1/admin/streams/{stream_id}/debate", ["GET"], _debate.get_stream_debate_endpoint),
     ("/api/v1/admin/streams/{stream_id}/debate", ["PUT"], _debate.associate_stream_debate_endpoint),
