@@ -123,10 +123,8 @@ function initJudgesManagement() {
  */
 async function loadStreamsForJudges() {
 	try {
-		const response = await fetch(`${getAPIBase()}/api/v1/admin/streams`);
-		const result = await response.json();
-
-		const streams = result?.data?.streams || result?.streams || [];
+		const result = await getStreamsList();
+		const streams = result?.streams || result?.data?.streams || (Array.isArray(result) ? result : []);
 		const select = document.getElementById('judges-stream-select');
 
 		if (!select) return;
@@ -213,8 +211,7 @@ function handleStreamChange(e) {
  */
 async function loadJudgesDataForStream(streamId) {
 	try {
-		const response = await fetch(`${getAPIBase()}/api/v1/admin/judges?stream_id=${encodeURIComponent(streamId)}`);
-		const result = await response.json();
+		const result = await apiRequest(`/api/v1/admin/judges?stream_id=${encodeURIComponent(streamId)}`);
 		const judges = result?.data?.judges || result?.judges || result?.data || [];
 		if (Array.isArray(judges) && judges.length > 0) {
 			judgesData = judges.map((j) => ({
@@ -330,9 +327,7 @@ function closeUserSelectionModal() {
  */
 async function loadUsersForSelection() {
 	try {
-		const response = await fetch(`${getAPIBase()}/api/v1/admin/users`);
-		const result = await response.json();
-
+		const result = await apiRequest('/api/v1/admin/users');
 		const users = result?.data?.users || result?.users || [];
 		renderUsersList(users);
 	} catch (error) {
@@ -483,17 +478,13 @@ async function saveJudgesData() {
 			leftVotes: Number(j.votes) || 0,
 			rightVotes: 0
 		}));
-		const response = await fetch(`${getAPIBase()}/api/v1/admin/judges`, {
+		const result = await apiRequest('/api/v1/admin/judges', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				streamId: window.currentStreamId,
 				judges: payload
 			})
 		});
-		if (!response.ok) {
-			throw new Error(`保存失败: ${response.status}`);
-		}
 
 		judgesData = updatedJudges;
 		console.log('💾 保存评委数据:', judgesData);
