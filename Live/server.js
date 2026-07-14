@@ -3556,6 +3556,33 @@ if (BACKEND_SERVER_URL) {
 	// 在所有本地路由之后，404处理器之前，添加代理中间件
 	// 这样，如果本地路由没有匹配，就会尝试代理到后端服务器
 	
+	// ==================== v1 路由别名（自动为 /api/admin/* 生成 /api/v1/admin/*） ====================
+	// 前端大量使用了 /api/v1/... 路径，但 server.js 只注册了 /api/... 版本
+	// 这里动态为所有已有本地路由创建 v1 别名，确保本地路由优先匹配
+	(function createV1Aliases() {
+		const registeredPaths = new Set();
+		
+		// 复制数组，避免遍历过程中新增路由影响迭代
+		[...app._router.stack].forEach(layer => {
+			if (!layer.route || !layer.route.path) return;
+			const path = layer.route.path;
+			if (!path.startsWith('/api/admin/')) return;
+			
+			const v1Path = path.replace('/api/admin/', '/api/v1/admin/');
+			if (v1Path === path) return; // 已经是 v1 路径，跳过
+			if (registeredPaths.has(v1Path)) return; // 避免重复注册
+			
+			const methods = Object.keys(layer.route.methods).filter(m => m !== '_all');
+			methods.forEach(method => {
+				const handlers = layer.route.stack.map(s => s.handle);
+				app[method](v1Path, ...handlers);
+				console.log(`🔗 v1别名: ${method.toUpperCase()} ${v1Path} -> ${path}`);
+			});
+			
+			registeredPaths.add(v1Path);
+		});
+	})();
+	
 	// 🔍 调试：添加测试中间件，看看请求是否到达这里
 	app.use('/api', (req, res, next) => {
 		console.log(`🔍 [调试] API请求到达代理位置: ${req.method} ${req.path}`);
