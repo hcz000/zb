@@ -2,7 +2,8 @@ import asyncio
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import store
@@ -41,6 +42,40 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
+
+
+# ---- 管理员认证中间件 ----
+# 无需认证的只读公开接口（观众观看页需要）
+_PUBLIC_READONLY_PATHS = {
+    "/api/admin/dashboard",
+    "/api/v1/admin/dashboard",
+    "/api/admin/dashboard/",
+    "/api/v1/admin/dashboard/",
+}
+_PUBLIC_PREFIXES = (
+    "/api/admin/dashboard",
+    "/api/v1/admin/dashboard",
+)
+
+
+@app.middleware("http")
+async def admin_auth_middleware(request: Request, call_next):
+    path = request.url.path
+    if path.startswith(("/api/admin", "/api/v1/admin")):
+        # 放行登录接口
+        if path == "/api/admin/login":
+            return await call_next(request)
+        # 放行 dashboard（观众观看页需要读取直播状态、流地址、票数）
+        if path in _PUBLIC_READONLY_PATHS or path.startswith(_PUBLIC_PREFIXES):
+            return await call_next(request)
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return JSONResponse(status_code=401, content={"success": False, "detail": "未授权，请先登录"})
+        token = auth_header.removeprefix("Bearer ")
+        if token not in store.admin_tokens:
+            return JSONResponse(status_code=401, content={"success": False, "detail": "登录已过期，请重新登录"})
+    return await call_next(request)
+
 
 for r in (
     auth.router,

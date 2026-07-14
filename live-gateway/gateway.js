@@ -38,6 +38,13 @@ app.use(express.static(SITE_ROOT, { index: false }));
 app.get('/', (req, res) => {
     res.sendFile(path.join(SITE_ROOT, 'admin', 'index.html'));
 });
+// 观众观看页：手动提供 /viewer/ → viewer/index.html
+app.get('/viewer', (req, res) => {
+    res.sendFile(path.join(SITE_ROOT, 'viewer', 'index.html'));
+});
+app.get('/viewer/', (req, res) => {
+    res.sendFile(path.join(SITE_ROOT, 'viewer', 'index.html'));
+});
 
 // ==================== 反向代理 ====================
 const proxy = httpProxy.createProxyServer({
