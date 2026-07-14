@@ -1506,8 +1506,7 @@ function hideSelectedStreamInfo() {
 // 加载所有流的直播状态
 async function loadAllStreamsStatus() {
 	try {
-		const response = await fetch(`${API_BASE}/streams`);
-		const result = await response.json();
+		const result = await getStreamsList();
 
 		// 处理响应格式
 		let streams = [];

@@ -198,47 +198,6 @@ app.use('/admin', express.static(path.join(__dirname, 'admin')));
 app.use('/static', express.static(path.join(__dirname, 'static')));
 // ==================== 后台管理路由结束 ====================
 
-// ==================== 优先代理到后端服务器（如果启用） ====================
-// 如果 PRIORITIZE_BACKEND_SERVER 为 true，所有 API 请求优先代理到后端服务器
-if (PRIORITIZE_BACKEND_SERVER && BACKEND_SERVER_URL) {
-	console.log('🔗 启用后端服务器优先模式：所有 API 请求将优先代理到后端服务器');
-	console.log(`🔗 后端服务器地址: ${BACKEND_SERVER_URL}`);
-	
-	// 创建代理中间件 - 代理所有 /api 开头的路径到后端服务器
-	const backendProxy = createProxyMiddleware({
-		target: BACKEND_SERVER_URL,
-		changeOrigin: true,
-		pathRewrite: {
-			// 保持路径不变，直接转发
-			'^/api': '/api'
-		},
-		logger: console,
-		onProxyReq: (proxyReq, req, res) => {
-			console.log(`🔄 [代理] ${req.method} ${req.path} -> ${BACKEND_SERVER_URL}${req.path}`);
-		},
-		onProxyRes: (proxyRes, req, res) => {
-			console.log(`✅ [代理] ${req.path} <- ${proxyRes.statusCode} ${BACKEND_SERVER_URL}`);
-		},
-		onError: (err, req, res) => {
-			console.error(`❌ [代理错误] ${req.path}:`, err.message);
-			if (!res.headersSent) {
-				res.status(502).json({
-					success: false,
-					error: 'Bad Gateway',
-					message: `无法连接到后端服务器 ${BACKEND_SERVER_URL}`,
-					path: req.path,
-					details: err.message
-				});
-			}
-		}
-	});
-	
-	// 在所有本地路由之前，添加代理中间件
-	// 使用 app.use('/api', ...) 确保所有 /api 开头的请求都被代理（包括 /api/v1/*）
-	app.use('/api', backendProxy);
-	console.log('✅ 代理中间件已成功配置');
-}
-
 // ==================== 直播流代理（SRS 服务器） ====================
 // 将直播流请求代理到 SRS 服务器，让小程序通过中间层访问
 const SRS_SERVER_URL = 'http://192.168.31.189:8086';
@@ -2355,11 +2314,9 @@ app.post('/api/v1/user-vote', handleUserVote);
 
 // 1.1 开始直播
 // 支持 /api/admin/live/start 和 /api/v1/admin/live/start 两种路径
-// 注意：如果 PRIORITIZE_BACKEND_SERVER = true，这些路由会被代理替代，不会执行
-if (!PRIORITIZE_BACKEND_SERVER) {
-	app.post('/api/admin/live/start', handleStartLive);
-	app.post('/api/v1/admin/live/start', handleStartLive);
-}
+// 本地处理，确保 streamLiveStatuses 实时更新
+app.post('/api/admin/live/start', handleStartLive);
+app.post('/api/v1/admin/live/start', handleStartLive);
 
 function handleStartLive(req, res) {
 	try {
@@ -2488,11 +2445,9 @@ function handleStartLive(req, res) {
 
 // 1.2 停止直播
 // 支持 /api/admin/live/stop 和 /api/v1/admin/live/stop 两种路径
-// 注意：如果 PRIORITIZE_BACKEND_SERVER = true，这些路由会被代理替代，不会执行
-if (!PRIORITIZE_BACKEND_SERVER) {
-	app.post('/api/admin/live/stop', handleStopLive);
-	app.post('/api/v1/admin/live/stop', handleStopLive);
-}
+// 本地处理，确保 streamLiveStatuses 实时更新
+app.post('/api/admin/live/stop', handleStopLive);
+app.post('/api/v1/admin/live/stop', handleStopLive);
 
 function handleStopLive(req, res) {
 	try {
@@ -2818,9 +2773,8 @@ app.post('/api/admin/live/reset-votes', (req, res) => {
 // 二、AI控制接口
 
 // 2.1 启动AI识别
-// 注意：如果 PRIORITIZE_BACKEND_SERVER = true，这些路由会被代理替代，不会执行
-if (!PRIORITIZE_BACKEND_SERVER) {
-	app.post('/api/admin/ai/start', (req, res) => {
+// 本地处理，由 server.js 直接管理 AI 状态
+app.post('/api/admin/ai/start', (req, res) => {
 	try {
 		const { settings, notifyUsers = true } = req.body;
 		
@@ -2879,12 +2833,10 @@ if (!PRIORITIZE_BACKEND_SERVER) {
 		});
 	}
 	});
-}
 
 // 2.2 停止AI识别
-// 注意：如果 PRIORITIZE_BACKEND_SERVER = true，这些路由会被代理替代，不会执行
-if (!PRIORITIZE_BACKEND_SERVER) {
-	app.post('/api/admin/ai/stop', (req, res) => {
+// 本地处理，由 server.js 直接管理 AI 状态
+app.post('/api/admin/ai/stop', (req, res) => {
 	try {
 		const { saveHistory = true, notifyUsers = true } = req.body;
 		
@@ -2938,12 +2890,10 @@ if (!PRIORITIZE_BACKEND_SERVER) {
 		});
 	}
 	});
-}
 
 // 2.3 暂停/恢复AI识别
-// 注意：如果 PRIORITIZE_BACKEND_SERVER = true，这些路由会被代理替代，不会执行
-if (!PRIORITIZE_BACKEND_SERVER) {
-	app.post('/api/admin/ai/toggle', (req, res) => {
+// 本地处理，由 server.js 直接管理 AI 状态
+app.post('/api/admin/ai/toggle', (req, res) => {
 	try {
 		const { action, notifyUsers = true } = req.body;
 		
@@ -3000,7 +2950,6 @@ if (!PRIORITIZE_BACKEND_SERVER) {
 		});
 	}
 	});
-}
 
 // 2.4 删除AI内容
 app.delete('/api/admin/ai/content/:contentId', (req, res) => {
@@ -3566,10 +3515,9 @@ server.listen(port, '0.0.0.0', () => {
 
 // ==================== 代理未匹配的 API 请求到后端服务器 ====================
 // 在所有本地路由之后，将未匹配的 API 请求代理到后端服务器
-// 注意：如果 PRIORITIZE_BACKEND_SERVER 为 true，这个代理不会执行（因为已经在前面处理了）
-// 注意：Express 路由是按顺序匹配的，如果本地路由已经匹配并处理了请求，就不会到达这里
+// Express 路由是按顺序匹配的，如果本地路由已经匹配并处理了请求，就不会到达这里
 // 所以这个代理只会处理本地路由没有匹配的请求
-if (BACKEND_SERVER_URL && !PRIORITIZE_BACKEND_SERVER) {
+if (BACKEND_SERVER_URL) {
 	console.log(`🔧 配置后端代理: /api/* -> ${BACKEND_SERVER_URL}`);
 	// 配置代理中间件
 	const proxyOptions = {
@@ -3616,8 +3564,6 @@ if (BACKEND_SERVER_URL && !PRIORITIZE_BACKEND_SERVER) {
 	
 	app.use('/api', backendProxy);
 	console.log('✅ 后端代理中间件已添加到路由栈');
-} else {
-	console.log('⚠️  后端代理未配置（BACKEND_SERVER_URL 或 PRIORITIZE_BACKEND_SERVER 不满足条件）');
 }
 
 // ==================== 404处理器（必须在所有路由之后） ====================
