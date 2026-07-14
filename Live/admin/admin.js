@@ -56,25 +56,30 @@ window.globalState = globalState;
 let ws = null;
 let wsReconnectTimer = null;
 
-// 页面导航
-document.addEventListener('DOMContentLoaded', async () => {
-	initNavigation();
-	
-	// 🔧 修复：先加载流列表，再加载 Dashboard（因为后端现在要求必须传递 stream_id）
-	// 先尝试加载流列表（如果流选择器存在）
+// 登录后初始化数据（由登录流程或token验证成功时调用）
+async function initAfterLogin() {
 	const streamSelect = document.getElementById('stream-select');
 	if (streamSelect) {
 		try {
 			await loadStreamsToSelect();
 		} catch (error) {
-			console.warn('⚠️ 加载流列表失败，继续加载 Dashboard:', error);
+			console.warn('⚠️ 加载流列表失败:', error);
 		}
 	}
-	
-	// 然后加载 Dashboard（此时应该已经有流ID了）
 	loadDashboard();
-	
 	initWebSocket();
+}
+
+// 页面导航
+document.addEventListener('DOMContentLoaded', async () => {
+	initNavigation();
+	
+	// 如果已有有效token，自动加载数据；否则等登录后再加载
+	const token = typeof getAuthToken === 'function' ? getAuthToken() : null;
+	if (token) {
+		initAfterLogin();
+	}
+	
 	// 仍然保留定时更新作为后备（如果 WebSocket 断开）
 	setInterval(updateDashboard, 10000); // 每10秒更新一次数据作为后备
 });
