@@ -156,35 +156,10 @@ function initVotesEvents() {
  */
 async function loadVotesStreamsList() {
 	try {
-		const streamSelect = document.getElementById('votes-stream-select');
-		if (!streamSelect) return;
-		
-		const streamsResult = await getStreamsList();
-		if (!streamsResult || !streamsResult.streams) {
-			console.warn('⚠️ 无法获取流列表');
-			return;
-		}
-		
-		const streams = streamsResult.streams;
-		
-		// 保存当前选中的值
-		const currentValue = streamSelect.value;
-		
-		// 清空并重新填充
-		streamSelect.innerHTML = '<option value="">请选择要管理的直播流</option>';
-		
-		streams.forEach(stream => {
-			const option = document.createElement('option');
-			option.value = stream.id;
-			option.textContent = `${stream.name || 'Unnamed'} (${stream.type || 'UNKNOWN'})`;
-			streamSelect.appendChild(option);
+		const streams = await fetchStreamsData();
+		fillStreamSelectElement('votes-stream-select', streams, {
+			placeholder: '请选择要管理的直播流'
 		});
-		
-		// 恢复之前选中的值
-		if (currentValue) {
-			streamSelect.value = currentValue;
-		}
-		
 		console.log('✅ 票数管理流列表已加载');
 	} catch (error) {
 		console.error('❌ 加载票数管理流列表失败:', error);
@@ -1356,51 +1331,18 @@ function initLiveControlEvents() {
  * 加载AI控制的直播流列表
  */
 async function loadAIStreamsList() {
-	const aiStreamSelect = document.getElementById('ai-stream-select');
-	if (!aiStreamSelect) return;
-	
 	try {
 		console.log('📡 加载AI直播流列表...');
-		
-		// 保存当前选中的值
-		const currentValue = aiStreamSelect.value;
-		
-		// 获取直播流列表
-		const result = await getStreamsList();
-		
-		if (result && result.streams) {
-			// 清空现有选项（保留默认选项）
-			aiStreamSelect.innerHTML = '<option value="">请选择要操作的直播流</option>';
-			
-			// 添加所有启用的直播流
-			const enabledStreams = result.streams.filter(stream => stream.enabled !== false);
-			
-			if (enabledStreams.length === 0) {
-				aiStreamSelect.innerHTML = '<option value="">暂无可用的直播流</option>';
-				console.warn('⚠️ 没有可用的直播流');
-				return;
-			}
-			
-			enabledStreams.forEach(stream => {
-				const option = document.createElement('option');
-				option.value = stream.id;
-				option.textContent = `${stream.name} (${stream.type.toUpperCase()})`;
-				aiStreamSelect.appendChild(option);
-			});
-			
-			// 恢复之前选中的值
-			if (currentValue) {
-				aiStreamSelect.value = currentValue;
-			}
-			
-			console.log(`✅ AI直播流列表已加载（${enabledStreams.length} 个）`);
-		} else {
-			console.error('❌ 获取直播流列表失败:', result);
-			aiStreamSelect.innerHTML = '<option value="">加载失败，请刷新</option>';
-		}
+		const streams = await fetchStreamsData();
+		fillStreamSelectElement('ai-stream-select', streams, {
+			onlyEnabled: true,
+			placeholder: '请选择要操作的直播流'
+		});
+		console.log('✅ AI直播流列表已加载');
 	} catch (error) {
 		console.error('❌ 加载AI直播流列表失败:', error);
-		aiStreamSelect.innerHTML = '<option value="">加载失败，请刷新</option>';
+		const aiStreamSelect = document.getElementById('ai-stream-select');
+		if (aiStreamSelect) aiStreamSelect.innerHTML = '<option value="">加载失败，请刷新</option>';
 	}
 }
 
@@ -1606,33 +1548,15 @@ async function sendDebateFlowControlFromPage(streamId, action, btn) {
  */
 async function loadDebateFlowStreamsList() {
 	try {
-		const streamSelect = document.getElementById('debate-flow-stream-select');
-		if (!streamSelect) return;
-		
-		const streamsResult = await getStreamsList();
-		if (!streamsResult || !streamsResult.streams) {
-			console.warn('⚠️ 无法获取流列表');
-			return;
-		}
-		
-		const currentValue = streamSelect.value;
-		streamSelect.innerHTML = '<option value="">请选择要管理的直播流</option>';
-		
-		streamsResult.streams.forEach(stream => {
-			const option = document.createElement('option');
-			option.value = stream.id;
-			option.textContent = `${stream.name} (${stream.type || 'HLS'})`;
-			streamSelect.appendChild(option);
+		const streams = await fetchStreamsData();
+		fillStreamSelectElement('debate-flow-stream-select', streams, {
+			placeholder: '请选择要管理的直播流'
 		});
-		
-		// 恢复之前的选择
-		if (currentValue) {
-			streamSelect.value = currentValue;
-			const event = new Event('change', { bubbles: true });
-			streamSelect.dispatchEvent(event);
-		}
+		console.log('✅ 辩论流程流列表加载成功:', streams.length, '条');
 	} catch (error) {
-		console.error('❌ 加载流列表失败:', error);
+		console.error('❌ 加载辩论流程流列表失败:', error);
+		const select = document.getElementById('debate-flow-stream-select');
+		if (select) select.innerHTML = '<option value="">加载失败，请刷新重试</option>';
 	}
 }
 

@@ -697,6 +697,12 @@ function loadPageData(page) {
 		case 'statistics':
 			loadStatistics();
 			break;
+		case 'debate-flow':
+			// 每次进入辩论流程页都重新拉取直播流，避免下拉为空（DOMContentLoaded 时异步拉取可能未就绪）
+			if (typeof loadDebateFlowStreamsList === 'function') {
+				loadDebateFlowStreamsList();
+			}
+			break;
 	}
 }
 
@@ -1527,6 +1533,62 @@ async function loadStreamsToSelect() {
 		if (streamSelect) streamSelect.innerHTML = '<option value="">加载失败，请刷新重试</option>';
 		if (topbarSelect) topbarSelect.innerHTML = '<option value="">加载失败，请刷新重试</option>';
 	}
+}
+
+// ==================== 共享：流下拉通用函数（所有下拉框复用这一份逻辑） ====================
+
+/**
+ * 拉取并解析直播流列表（统一调用 getStreamsList，兼容所有返回格式）
+ * @returns {Promise<Array>} 流数据数组
+ */
+async function fetchStreamsData() {
+	const result = await getStreamsList();
+	let streams = [];
+	if (Array.isArray(result)) {
+		streams = result;
+	} else if (result && Array.isArray(result.data)) {
+		streams = result.data;
+	} else if (result && typeof result === 'object') {
+		streams = result.streams || result.items || result.list || [];
+	}
+	return streams;
+}
+
+/**
+ * 用流列表填充任意 select 元素
+ * @param {string} selectId - select 元素的 id
+ * @param {Array} streams - 流数据数组
+ * @param {Object} [options] - 可选配置
+ * @param {boolean} [options.onlyEnabled=false] - 是否只显示启用的流
+ * @param {string} [options.placeholder='请选择直播流'] - 占位提示文字
+ * @returns {Array} 实际填充的流列表
+ */
+function fillStreamSelectElement(selectId, streams, options = {}) {
+	const select = document.getElementById(selectId);
+	if (!select) return [];
+
+	const { onlyEnabled = false, placeholder = '请选择直播流' } = options;
+	const currentValue = select.value;
+
+	const filtered = onlyEnabled ? streams.filter(s => s.enabled) : streams;
+
+	let html = `<option value="">${placeholder}</option>`;
+	if (filtered.length === 0) {
+		html += '<option value="" disabled>暂无可用的直播流</option>';
+	} else {
+		filtered.forEach(s => {
+			const label = `${s.name} (${s.type?.toUpperCase() || 'HLS'})${s.enabled ? '' : ' [已禁用]'}`;
+			html += `<option value="${escapeHtml(s.id)}">${escapeHtml(label)}</option>`;
+		});
+	}
+	select.innerHTML = html;
+
+	// 恢复之前选中的值
+	if (currentValue && filtered.some(s => s.id === currentValue)) {
+		select.value = currentValue;
+	}
+
+	return filtered;
 }
 
 // 更新选中的直播流信息显示
@@ -2691,11 +2753,10 @@ async function loadScheduleStreamsList() {
 	if (!select) return;
 	
 	try {
-		const result = await getStreamsList();
-		const streams = result?.streams || result?.data || [];
-		
-		select.innerHTML = '<option value="">请选择直播流</option>' +
-			streams.map(s => `<option value="${s.id}">${s.name || 'Unnamed'} (${s.type || 'hls'})</option>`).join('');
+		const streams = await fetchStreamsData();
+		fillStreamSelectElement('schedule-stream-select', streams, {
+			placeholder: '请选择直播流'
+		});
 	} catch (err) {
 		console.error('加载计划流列表失败:', err);
 	}
@@ -2729,12 +2790,10 @@ async function loadStatsStreamsList() {
 	if (!select) return;
 	
 	try {
-		const result = await getStreamsList();
-		const streams = result?.streams || result?.data || [];
-		
+		const streams = await fetchStreamsData();
 		// 保留第一个"全部"选项
 		select.innerHTML = '<option value="">全部直播流</option>' +
-			streams.map(s => `<option value="${s.id}">${s.name || 'Unnamed'}</option>`).join('');
+			streams.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name || 'Unnamed')}</option>`).join('');
 	} catch (err) {
 		console.error('加载统计流列表失败:', err);
 	}

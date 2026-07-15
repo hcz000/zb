@@ -123,34 +123,22 @@ function initJudgesManagement() {
  */
 async function loadStreamsForJudges() {
 	try {
-		const result = await getStreamsList();
-		const streams = result?.streams || result?.data?.streams || (Array.isArray(result) ? result : []);
-		const select = document.getElementById('judges-stream-select');
-
-		if (!select) return;
-
-		select.innerHTML = '<option value="">请选择要管理的直播流</option>';
-
-		streams.forEach(stream => {
-			if (stream.enabled) {
-				const option = document.createElement('option');
-				option.value = stream.id;
-				option.textContent = `${stream.name} (${stream.type?.toUpperCase() || 'HLS'})`;
-				select.appendChild(option);
-			}
+		const allStreams = await fetchStreamsData();
+		const streams = fillStreamSelectElement('judges-stream-select', allStreams, {
+			onlyEnabled: true,
+			placeholder: '请选择要管理的直播流'
 		});
 
-		console.log('✅ 加载直播流列表成功:', streams.length, '条');
+		console.log('✅ 评委管理流列表加载成功:', streams.length, '条');
 
-		// 接口的流已成功加载并填充到下拉，下面的"自动选中"即使出错也不能清空下拉
+		// 自动选中第一个启用的流
 		if (streams.length > 0) {
 			try {
-				select.value = streams[0].id;
+				document.getElementById('judges-stream-select').value = streams[0].id;
 				selectStream(streams[0].id);
 			} catch (selErr) {
-				// 自动选中/拉评委失败：下拉仍可用，用户也能手动选；仅记录真实错误
 				console.error('⚠️ 自动选中直播流时出错（下拉已填充，可手动选择）:', selErr, selErr && selErr.stack);
-				window.currentStreamId = streams[0].id; // 至少保证 currentStreamId 已设置
+				window.currentStreamId = streams[0].id;
 			}
 		} else {
 			const tip = document.getElementById('judges-current-stream-info');

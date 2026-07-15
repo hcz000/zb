@@ -87,6 +87,135 @@ video {
   background: #d32f2f; color: white; padding: 10px 24px; border-radius: 8px;
   font-size: 13px; z-index: 999; display: none;
 }
+
+/* ============= 观众投票面板 ============= */
+.vote-panel {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  background: rgba(15, 15, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 20;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: none;
+}
+.vote-panel.visible { display: block; }
+
+.vote-panel-title {
+  font-size: 13px;
+  color: #ffd54f;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.vote-quick {
+  display: flex;
+  gap: 8px;
+}
+.vote-quick-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+  letter-spacing: 1px;
+}
+.vote-quick-btn.left {
+  background: linear-gradient(135deg, #0288d1, #4fc3f7);
+}
+.vote-quick-btn.right {
+  background: linear-gradient(135deg, #e64a19, #ff8a65);
+}
+.vote-quick-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+.vote-quick-btn:active:not(:disabled) { transform: translateY(0); }
+.vote-quick-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vote-status {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 11px;
+  color: #aaa;
+  min-height: 14px;
+}
+.vote-status.ok { color: #66bb6a; }
+.vote-status.err { color: #ef5350; }
+.vote-status.voted { color: #ffd54f; }
+
+/* 流选择器 */
+.stream-selector {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: #e0e0e0;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  max-width: 160px;
+}
+.stream-selector option { background: #1a1a2e; color: #e0e0e0; }
+
+/* 评委展示区 */
+.judges-bar {
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 16px; z-index: 5;
+}
+.judge-card {
+  background: rgba(15, 15, 26, 0.85); border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px; padding: 8px 14px; text-align: center;
+  backdrop-filter: blur(8px); min-width: 100px;
+}
+.judge-card .name { font-size: 12px; font-weight: bold; color: #ffd54f; }
+.judge-card .role { font-size: 10px; color: #aaa; margin: 2px 0; }
+.judge-card .vote-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.judge-card .vote-l { font-size: 11px; color: #4fc3f7; }
+.judge-card .vote-r { font-size: 11px; color: #ff8a65; }
+.judge-card .vote-vs { font-size: 10px; color: #666; }
+
+/* 辩论计时器 */
+.debate-timer-overlay {
+  position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.75); padding: 10px 24px; border-radius: 12px;
+  text-align: center; backdrop-filter: blur(10px); z-index: 5;
+}
+.debate-timer-overlay .segment-name { font-size: 14px; color: #ffd54f; font-weight: bold; }
+.debate-timer-overlay .segment-side { font-size: 11px; color: #aaa; margin: 2px 0; }
+.debate-timer-overlay .timer-display { font-size: 32px; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
+.debate-timer-overlay .timer-display.warning { color: #ff9800; }
+.debate-timer-overlay .timer-display.danger { color: #ff4444; animation: pulse 1s infinite; }
+
+/* 移动端响应式 */
+@media (max-width: 640px) {
+  .vote-panel {
+    right: 8px;
+    width: 150px;
+    padding: 10px;
+  }
+  .vote-quick-btn { padding: 8px 0; font-size: 12px; }
+  .vote-panel-title { font-size: 12px; margin-bottom: 8px; }
+  .judges-bar { bottom: 70px; gap: 8px; }
+  .judge-card { padding: 6px 8px; min-width: 70px; }
+  .debate-timer-overlay { top: 90px; padding: 8px 16px; }
+  .debate-timer-overlay .timer-display { font-size: 24px; }
+}
 </style>
 </head>
 <body>
@@ -95,6 +224,7 @@ video {
   <div class="top-bar" id="topBar">
     <span class="live-badge" id="liveBadge" style="display:none;">🔴 LIVE</span>
     <span class="topic-info topic-text" id="topicLabel" style="position:static;transform:none;background:none;padding:0;font-size:13px;"></span>
+    <select class="stream-selector" id="streamSelector" onchange="onStreamSwitch(this.value)" style="margin-left:8px;" title="切换直播流"></select>
     <span class="viewer-count" id="viewerCount"></span>
   </div>
 
@@ -124,6 +254,26 @@ video {
         <span class="vote-side vote-right"><span id="rightCount">0</span> 反方</span>
       </div>
     </div>
+
+    <!-- 评委展示区 -->
+    <div class="judges-bar" id="judgesBar" style="display:none;"></div>
+
+    <!-- 辩论计时器 -->
+    <div class="debate-timer-overlay" id="debateTimer" style="display:none;">
+      <div class="segment-name" id="segmentName"></div>
+      <div class="segment-side" id="segmentSide"></div>
+      <div class="timer-display" id="timerDisplay">00:00</div>
+    </div>
+
+    <!-- 观众投票面板 -->
+    <div class="vote-panel" id="votePanel">
+      <div class="vote-panel-title">投出你的票</div>
+      <div class="vote-quick">
+        <button class="vote-quick-btn left" id="btnVoteLeft" onclick="quickVote('left')">支持正方</button>
+        <button class="vote-quick-btn right" id="btnVoteRight" onclick="quickVote('right')">支持反方</button>
+      </div>
+      <div class="vote-status" id="voteStatus"></div>
+    </div>
   </div>
 </div>
 
@@ -137,16 +287,16 @@ function apiBase() {
 }
 
 async function apiGet(path) {
-  const res = await fetch(apiBase() + path);
+  var res = await fetch(apiBase() + path);
   return res.json();
 }
 
 // ===================== 视频播放器 =====================
-let hls = null;
-let flvPlayer = null;
+var hls = null;
+var flvPlayer = null;
 
 function showError(msg) {
-  const el = document.getElementById('errorToast');
+  var el = document.getElementById('errorToast');
   el.textContent = msg;
   el.style.display = 'block';
   setTimeout(function() { el.style.display = 'none'; }, 4000);
@@ -159,15 +309,14 @@ function destroyPlayer() {
 
 function playStream(url) {
   destroyPlayer();
-  const video = document.getElementById('liveVideo');
+  var video = document.getElementById('liveVideo');
   video.style.display = 'block';
   document.getElementById('loadingState').style.display = 'none';
   document.getElementById('offlineState').style.display = 'none';
 
-  const lowerUrl = url.toLowerCase();
+  var lowerUrl = url.toLowerCase();
 
   if (lowerUrl.endsWith('.m3u8')) {
-    // HLS 流
     if (Hls.isSupported()) {
       hls = new Hls({ enableWorker: true, lowLatencyMode: true });
       hls.loadSource(url);
@@ -177,19 +326,17 @@ function playStream(url) {
       });
       hls.on(Hls.Events.ERROR, function(_, data) {
         if (data.fatal) {
-          console.error('HLS 错误:', data.type, data.details);
+          console.error('HLS error:', data.type, data.details);
           showError('直播流连接失败，请检查流地址或网络');
         }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari 原生支持
       video.src = url;
       video.play().catch(function() {});
     } else {
       showError('浏览器不支持 HLS 播放，请使用 Chrome/Edge 或 Safari');
     }
   } else if (lowerUrl.endsWith('.flv')) {
-    // FLV 流
     if (flvjs.isSupported()) {
       flvPlayer = flvjs.createPlayer({ type: 'flv', url: url, isLive: true });
       flvPlayer.attachMediaElement(video);
@@ -202,7 +349,6 @@ function playStream(url) {
     showError('RTMP 流无法直接在浏览器播放，请使用 HLS 或 FLV 格式');
     return;
   } else {
-    // 其他格式，直接设置 src
     video.src = url;
     video.play().catch(function() {});
   }
@@ -215,24 +361,49 @@ function showOffline() {
   document.getElementById('offlineState').style.display = '';
   document.getElementById('liveBadge').style.display = 'none';
   document.getElementById('voteOverlay').style.display = 'none';
+  document.getElementById('judgesBar').style.display = 'none';
+  document.getElementById('debateTimer').style.display = 'none';
+  showVotePanel(false);
+  stopDebateTimer();
 }
 
 function showLive(streamUrl) {
   document.getElementById('liveBadge').style.display = '';
   document.getElementById('voteOverlay').style.display = '';
+  showVotePanel(true);
   if (streamUrl) playStream(streamUrl);
   else showError('直播流地址为空，请检查后台直播流配置');
 }
 
 // ===================== 票数更新 =====================
+var voteHistory = [];
+
+function recordVoteHistory(left, right) {
+  voteHistory.push({ left: left, right: right, time: Date.now() });
+  if (voteHistory.length > 120) voteHistory.shift();
+}
+
 function updateVotes(left, right, total) {
+  if (typeof total !== 'number' || isNaN(total)) total = (left || 0) + (right || 0);
+  if (typeof left !== 'number' || isNaN(left)) left = 0;
+  if (typeof right !== 'number' || isNaN(right)) right = 0;
   document.getElementById('leftCount').textContent = left;
   document.getElementById('rightCount').textContent = right;
   document.getElementById('totalVotes').textContent = total;
-  var lp = total > 0 ? (left / total * 100).toFixed(1) : 50;
-  var rp = total > 0 ? (right / total * 100).toFixed(1) : 50;
-  document.getElementById('voteLeftBar').style.width = lp + '%';
-  document.getElementById('voteRightBar').style.width = rp + '%';
+  var lp = total > 0 ? (left / total * 100) : 50;
+  var rp = total > 0 ? (right / total * 100) : 50;
+  document.getElementById('voteLeftBar').style.width = lp.toFixed(1) + '%';
+  document.getElementById('voteRightBar').style.width = rp.toFixed(1) + '%';
+  recordVoteHistory(left, right);
+}
+
+// ===================== 流过滤函数 =====================
+function isMessageForCurrentStream(msg) {
+  var msgStreamId = (msg.data && msg.data.streamId) || msg.streamId;
+  if (!msgStreamId) return true; // 无 streamId 视为全局消息
+  if (msgStreamId === currentStreamId) return true;
+  console.log('[stream filter] ignore message from stream:', msgStreamId, 'current:', currentStreamId);
+  return false;
 }
 
 // ===================== WebSocket =====================
@@ -241,13 +412,21 @@ function connectWS() {
   var wsUrl = proto + '//' + window.location.host + '/ws';
   var ws = new WebSocket(wsUrl);
 
-  ws.onopen = function() { console.log('WebSocket 已连接'); };
+  ws.onopen = function() { console.log('WebSocket connected'); };
 
   ws.onmessage = function(e) {
     try {
       var msg = JSON.parse(e.data);
+
+      // ----- streamId 过滤 -----
+      if (!isMessageForCurrentStream(msg)) return;
+
       if (msg.type === 'liveStatus') {
         if (msg.data && msg.data.isLive) {
+          // 如果是新流 ID，先切换上下文再显示
+          if (msg.data.streamId && msg.data.streamId !== currentStreamId) {
+            applyStreamContext(msg.data.streamId);
+          }
           showLive(msg.data.streamUrl);
         } else {
           showOffline();
@@ -257,27 +436,377 @@ function connectWS() {
         updateVotes(d.leftVotes || d.left || 0, d.rightVotes || d.right || 0, d.totalVotes || d.total || 0);
       } else if (msg.type === 'viewers-updated') {
         document.getElementById('viewerCount').textContent = '👁 ' + (msg.data.viewers || 0) + ' 人观看';
+      } else if (msg.type === 'judges-updated') {
+        renderJudges(msg.data.judges);
+      } else if (msg.type === 'debate-flow-updated') {
+        updateDebateSegments(msg.data.flow);
+      } else if (msg.type === 'debate-flow-control') {
+        handleDebateControl(msg.data);
       }
     } catch (_) {}
   };
 
   ws.onclose = function() {
-    console.log('WebSocket 断开，3秒后重连...');
+    console.log('WebSocket disconnected, reconnect in 3s...');
     setTimeout(connectWS, 3000);
   };
 
   ws.onerror = function() { ws.close(); };
 }
 
+// ===================== 评委展示 =====================
+function renderJudges(judges) {
+  var bar = document.getElementById('judgesBar');
+  if (!judges || !judges.length) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  var html = '';
+  judges.forEach(function(j) {
+    html += '<div class="judge-card">' +
+      '<div class="name">' + escapeHtml(j.name || '') + '</div>' +
+      '<div class="role">' + escapeHtml(j.role || '') + '</div>' +
+      '<div class="vote-row">' +
+        '<span class="vote-l">正' + (j.leftVotes || 0) + '</span>' +
+        '<span class="vote-vs">:</span>' +
+        '<span class="vote-r">反' + (j.rightVotes || 0) + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+  bar.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// ===================== 辩论流程 =====================
+var debateSegments = [];
+var debateTimer = null;
+var currentSegmentIndex = -1;
+var segmentRemaining = 0;
+
+function updateDebateSegments(flow) {
+  debateSegments = flow || [];
+  currentSegmentIndex = -1;
+  stopDebateTimer();
+  document.getElementById('debateTimer').style.display = 'none';
+}
+
+function handleDebateControl(data) {
+  var action = data.action;
+  var segIdx = typeof data.segmentIndex === 'number' ? data.segmentIndex : -1;
+
+  switch (action) {
+    case 'start':
+      if (segIdx >= 0 && segIdx < debateSegments.length) {
+        currentSegmentIndex = segIdx;
+      } else {
+        currentSegmentIndex = 0;
+      }
+      startSegment(currentSegmentIndex);
+      break;
+    case 'pause':
+      pauseDebateTimer();
+      break;
+    case 'resume':
+      resumeDebateTimer();
+      break;
+    case 'reset':
+      resetDebateTimer();
+      break;
+    case 'next':
+      nextSegment();
+      break;
+    case 'prev':
+      prevSegment();
+      break;
+  }
+}
+
+function startSegment(idx) {
+  if (idx < 0 || idx >= debateSegments.length) return;
+  currentSegmentIndex = idx;
+  var seg = debateSegments[idx];
+  segmentRemaining = seg.duration || 0;
+
+  var timerEl = document.getElementById('debateTimer');
+  timerEl.style.display = '';
+  document.getElementById('segmentName').textContent = seg.name || '';
+  var sideMap = { left: '正方环节', right: '反方环节', both: '双方环节' };
+  document.getElementById('segmentSide').textContent = sideMap[seg.side] || '';
+
+  updateTimerDisplay();
+  stopDebateTimer();
+  debateTimer = setInterval(function() {
+    segmentRemaining--;
+    updateTimerDisplay();
+    if (segmentRemaining <= 0) {
+      stopDebateTimer();
+      document.getElementById('timerDisplay').textContent = '00:00';
+    }
+  }, 1000);
+}
+
+function pauseDebateTimer() {
+  if (debateTimer) {
+    clearInterval(debateTimer);
+    debateTimer = null;
+  }
+}
+
+function resumeDebateTimer() {
+  if (currentSegmentIndex < 0 || segmentRemaining <= 0) return;
+  stopDebateTimer();
+  debateTimer = setInterval(function() {
+    segmentRemaining--;
+    updateTimerDisplay();
+    if (segmentRemaining <= 0) {
+      stopDebateTimer();
+      document.getElementById('timerDisplay').textContent = '00:00';
+    }
+  }, 1000);
+}
+
+function stopDebateTimer() {
+  if (debateTimer) {
+    clearInterval(debateTimer);
+    debateTimer = null;
+  }
+}
+
+function resetDebateTimer() {
+  stopDebateTimer();
+  currentSegmentIndex = -1;
+  segmentRemaining = 0;
+  document.getElementById('debateTimer').style.display = 'none';
+  document.getElementById('timerDisplay').className = 'timer-display';
+  document.getElementById('timerDisplay').textContent = '00:00';
+}
+
+function nextSegment() {
+  if (debateSegments.length === 0) return;
+  var nextIdx = currentSegmentIndex + 1;
+  if (nextIdx >= debateSegments.length) nextIdx = 0;
+  startSegment(nextIdx);
+}
+
+function prevSegment() {
+  if (debateSegments.length === 0) return;
+  var prevIdx = currentSegmentIndex - 1;
+  if (prevIdx < 0) prevIdx = debateSegments.length - 1;
+  startSegment(prevIdx);
+}
+
+function updateTimerDisplay() {
+  var el = document.getElementById('timerDisplay');
+  var mins = Math.floor(Math.max(0, segmentRemaining) / 60);
+  var secs = Math.max(0, segmentRemaining) % 60;
+  el.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+  el.className = 'timer-display';
+  if (segmentRemaining <= 10) el.className += ' danger';
+  else if (segmentRemaining <= 30) el.className += ' warning';
+}
+
+// ===================== 流切换 =====================
+function onStreamSwitch(streamId) {
+  if (!streamId || streamId === currentStreamId) return;
+  switchToStream(streamId);
+}
+
+async function switchToStream(streamId) {
+  stopDebateTimer();
+  resetDebateTimer();
+  document.getElementById('debateTimer').style.display = 'none';
+  document.getElementById('judgesBar').style.display = 'none';
+  debateSegments = [];
+  voteHistory = [];
+  currentSegmentIndex = -1;
+
+  applyStreamContext(streamId);
+
+  // 更新选择器
+  var sel = document.getElementById('streamSelector');
+  if (sel) sel.value = streamId;
+
+  try {
+    // 重新加载仪表盘数据
+    var dashData = await apiGet('/api/admin/dashboard?stream_id=' + encodeURIComponent(streamId));
+    if (dashData && dashData.data) {
+      var d = dashData.data;
+      if (d.debateTopic && d.debateTopic.title) {
+        document.getElementById('topicLabel').textContent = d.debateTopic.title;
+      }
+      if (typeof d.leftVotes === 'number' || typeof d.rightVotes === 'number') {
+        updateVotes(d.leftVotes || 0, d.rightVotes || 0, d.totalVotes || ((d.leftVotes || 0) + (d.rightVotes || 0)));
+      }
+    }
+
+    // 加载评委数据
+    var judgesData = await apiGet('/api/admin/judges?stream_id=' + encodeURIComponent(streamId));
+    if (judgesData && judgesData.data) {
+      renderJudges(judgesData.data.judges || (Array.isArray(judgesData.data) ? judgesData.data : null));
+    }
+
+    // 加载辩论流程
+    var flowData = await apiGet('/api/admin/debate-flow?stream_id=' + encodeURIComponent(streamId));
+    if (flowData && flowData.data) {
+      updateDebateSegments(flowData.data.flow || (Array.isArray(flowData.data) ? flowData.data : null));
+    }
+  } catch (err) {
+    console.error('stream switch error:', err);
+  }
+}
+
+// ===================== 流列表加载 =====================
+async function loadStreamList() {
+  try {
+    var data = await apiGet('/api/admin/streams');
+    var streams = (data && data.data) || (Array.isArray(data) ? data : []);
+    var sel = document.getElementById('streamSelector');
+    sel.innerHTML = '<option value="">-- 选择直播流 --</option>';
+    streams.forEach(function(s) {
+      var id = s.id || s.streamId || '';
+      var name = s.name || s.title || id;
+      var opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = name;
+      if (id === currentStreamId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  } catch (_) { console.error('load streams error'); }
+}
+
+// ===================== 投票逻辑 =====================
+var currentStreamId = null;
+var hasVoted = false;
+
+function getUserId() {
+  try {
+    var uid = localStorage.getItem('viewer_uid');
+    if (!uid) {
+      uid = 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      localStorage.setItem('viewer_uid', uid);
+    }
+    return uid;
+  } catch (_) {
+    return 'u_anon_' + Date.now();
+  }
+}
+
+function voteStorageKey(streamId) {
+  return 'viewer_voted_' + (streamId || 'default');
+}
+
+function setVoteStatus(text, cls) {
+  var el = document.getElementById('voteStatus');
+  if (!el) return;
+  el.textContent = text || '';
+  el.className = 'vote-status' + (cls ? ' ' + cls : '');
+}
+
+function setVotedUI(voted) {
+  hasVoted = voted;
+  var btns = [
+    document.getElementById('btnVoteLeft'),
+    document.getElementById('btnVoteRight')
+  ];
+  btns.forEach(function(b) { if (b) b.disabled = !!voted; });
+  if (voted) setVoteStatus('你已为本场直播投过票', 'voted');
+}
+
+async function submitVote(payload) {
+  if (hasVoted) {
+    setVoteStatus('你已为本场直播投过票', 'voted');
+    return false;
+  }
+  if (!currentStreamId) {
+    setVoteStatus('暂未开始直播，无法投票', 'err');
+    return false;
+  }
+  try {
+    var res = await fetch(apiBase() + '/api/user-vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    var json = await res.json().catch(function() { return null; });
+    if (!res.ok || (json && json.code && json.code !== 0)) {
+      var msg = (json && (json.message || json.error)) || ('投票失败 (' + res.status + ')');
+      setVoteStatus(msg, 'err');
+      return false;
+    }
+    try { localStorage.setItem(voteStorageKey(currentStreamId), '1'); } catch (_) {}
+    setVotedUI(true);
+    var d = (json && json.data) || json || {};
+    if (typeof d.leftVotes === 'number' && typeof d.rightVotes === 'number') {
+      var total = d.totalVotes || (d.leftVotes + d.rightVotes);
+      updateVotes(d.leftVotes, d.rightVotes, total);
+    }
+    setVoteStatus('投票成功！', 'ok');
+    return true;
+  } catch (err) {
+    console.error('vote error:', err);
+    setVoteStatus('网络异常，请稍后再试', 'err');
+    return false;
+  }
+}
+
+function quickVote(side) {
+  if (hasVoted) { setVoteStatus('你已为本场直播投过票', 'voted'); return; }
+  submitVote({
+    side: side,
+    votes: 1,
+    streamId: currentStreamId,
+    userId: getUserId()
+  });
+}
+
+function showVotePanel(show) {
+  var p = document.getElementById('votePanel');
+  if (p) p.classList.toggle('visible', !!show);
+}
+
+function applyStreamContext(streamId) {
+  if (!streamId) return;
+  if (currentStreamId === streamId) return;
+  currentStreamId = streamId;
+  hasVoted = false;
+  voteHistory = [];
+  var voted = false;
+  try { voted = localStorage.getItem(voteStorageKey(streamId)) === '1'; } catch (_) {}
+  setVotedUI(voted);
+  if (!voted) setVoteStatus('', '');
+}
+
 // ===================== 初始化 =====================
 (async function init() {
+  // 从 URL 参数读取初始 streamId
+  var urlParams = new URLSearchParams(window.location.search);
+  var initStreamId = urlParams.get('stream_id') || urlParams.get('streamId');
+
   connectWS();
 
   try {
+    // 加载流列表
+    await loadStreamList();
+
     // 获取 dashboard 数据
     var data = await apiGet('/api/admin/dashboard');
     if (data && data.data) {
       var d = data.data;
+
+      // 优先使用 URL 参数指定的 streamId，否则使用 dashboard 返回的
+      var targetStreamId = initStreamId || d.streamId;
+      if (targetStreamId) applyStreamContext(targetStreamId);
+
+      // 更新流选择器选中项
+      var sel = document.getElementById('streamSelector');
+      if (sel && currentStreamId) sel.value = currentStreamId;
 
       // 辩题
       if (d.debateTopic && d.debateTopic.title) {
@@ -287,38 +816,65 @@ function connectWS() {
       // 直播状态
       if (d.isLive) {
         showLive(d.liveStreamUrl || d.activeStreamUrl);
+        showVotePanel(true);
       } else {
         showOffline();
+        showVotePanel(false);
       }
 
       // 票数
-      if (d.votes) {
-        updateVotes(d.votes.leftVotes || 0, d.votes.rightVotes || 0, d.votes.totalVotes || 0);
+      if (typeof d.leftVotes === 'number' || typeof d.rightVotes === 'number') {
+        updateVotes(d.leftVotes || 0, d.rightVotes || 0, d.totalVotes || ((d.leftVotes || 0) + (d.rightVotes || 0)));
       }
       if (d.liveViewers != null) {
         document.getElementById('viewerCount').textContent = '👁 ' + d.liveViewers + ' 人观看';
       }
     } else {
       showOffline();
+      showVotePanel(false);
+    }
+
+    // 加载评委数据
+    if (currentStreamId) {
+      try {
+        var jd = await apiGet('/api/admin/judges?stream_id=' + encodeURIComponent(currentStreamId));
+        if (jd && jd.data) {
+          renderJudges(jd.data.judges || (Array.isArray(jd.data) ? jd.data : null));
+        }
+      } catch (_) {}
+
+      // 加载辩论流程
+      try {
+        var fd = await apiGet('/api/admin/debate-flow?stream_id=' + encodeURIComponent(currentStreamId));
+        if (fd && fd.data) {
+          updateDebateSegments(fd.data.flow || (Array.isArray(fd.data) ? fd.data : null));
+        }
+      } catch (_) {}
     }
   } catch (err) {
-    console.error('初始化失败:', err);
+    console.error('init error:', err);
     showOffline();
+    showVotePanel(false);
   }
 
-  // 定时轮询直播状态（兜底）
+  // 定时轮询（兜底）
   setInterval(async function() {
     try {
       var data = await apiGet('/api/admin/dashboard');
       if (data && data.data) {
         var d = data.data;
+        if (d.streamId) applyStreamContext(d.streamId);
         if (d.isLive && document.getElementById('liveVideo').style.display === 'none') {
           showLive(d.liveStreamUrl || d.activeStreamUrl);
+          showVotePanel(true);
         } else if (!d.isLive && document.getElementById('liveVideo').style.display !== 'none') {
           showOffline();
+          showVotePanel(false);
+        } else if (d.isLive) {
+          showVotePanel(true);
         }
-        if (d.votes) {
-          updateVotes(d.votes.leftVotes || 0, d.votes.rightVotes || 0, d.votes.totalVotes || 0);
+        if (typeof d.leftVotes === 'number' || typeof d.rightVotes === 'number') {
+          updateVotes(d.leftVotes || 0, d.rightVotes || 0, d.totalVotes || ((d.leftVotes || 0) + (d.rightVotes || 0)));
         }
       }
     } catch (_) {}
